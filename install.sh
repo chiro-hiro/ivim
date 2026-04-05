@@ -3,6 +3,11 @@ set -euo pipefail
 
 # iVim installer — symlinks ~/.vim and ~/.vimrc to this directory
 
+if [ "$(id -u)" -eq 0 ]; then
+  echo "Error: Do not run this script as root or with sudo." >&2
+  exit 1
+fi
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TIMESTAMP="$(date +%s)"
 VIM_DIR="$HOME/.vim"
@@ -56,8 +61,9 @@ install() {
   ln -s "$SCRIPT_DIR/vimrc" "$VIMRC"
   echo "  Linked: $VIMRC → $SCRIPT_DIR/vimrc"
 
-  # Create undo directory
+  # Create undo directory (700 to prevent other users reading undo history)
   mkdir -p "$UNDO_DIR"
+  chmod 700 "$UNDO_DIR"
   echo "  Created: $UNDO_DIR"
 
   echo ""

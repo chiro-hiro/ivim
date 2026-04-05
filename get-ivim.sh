@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+if [ "$(id -u)" -eq 0 ]; then
+  printf '\033[31m\033[1merror:\033[0m Do not run this script as root or with sudo.\n' >&2
+  exit 1
+fi
+
 # iVim online installer
 # Usage: curl -fsSL https://raw.githubusercontent.com/user/ivim/master/get-ivim.sh | bash
 #    or: curl -fsSL https://raw.githubusercontent.com/user/ivim/master/get-ivim.sh | bash -s -- --uninstall
@@ -112,8 +117,9 @@ install() {
   ln -s "$IVIM_DIR/vimrc" "$VIMRC"
   ok "Linked $VIMRC → $IVIM_DIR/vimrc"
 
-  # Undo directory
+  # Undo directory (700 to prevent other users reading undo history)
   mkdir -p "$UNDO_DIR"
+  chmod 700 "$UNDO_DIR"
   ok "Created $UNDO_DIR"
 
   printf "\n"
