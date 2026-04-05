@@ -25,19 +25,19 @@ When you SSH into a production server, audit a remote system, or work inside a h
 ### One-line install (from GitHub)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/<user>/ivim/master/get-ivim.sh | bash
+curl -fsSL https://raw.githubusercontent.com/chiro-hiro/ivim/master/get-ivim.sh | bash
 ```
 
 ### Uninstall
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/<user>/ivim/master/get-ivim.sh | bash -s -- --uninstall
+curl -fsSL https://raw.githubusercontent.com/chiro-hiro/ivim/master/get-ivim.sh | bash -s -- --uninstall
 ```
 
 ### Local install (from clone)
 
 ```bash
-git clone https://github.com/<user>/ivim.git
+git clone https://github.com/chiro-hiro/ivim.git
 cd ivim
 ./install.sh
 ```
