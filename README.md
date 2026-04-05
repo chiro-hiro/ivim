@@ -20,6 +20,8 @@ When you SSH into a production server, audit a remote system, or work inside a h
 - **Graceful degradation** -- works on Vim 8.0+ and falls back cleanly on minimal builds (`vim-tiny`, no clipboard, no mouse)
 - **Tokyo Night theme** -- easy on the eyes during long sessions, with full 256-color fallback
 
+![iVim Screenshot](assets/ivim.png)
+
 ## Install
 
 ### One-line install (from GitHub)
