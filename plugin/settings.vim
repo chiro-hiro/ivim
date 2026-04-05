@@ -1,5 +1,9 @@
 " Core editor settings for iVim
 
+" --- Security ---
+set nomodeline
+set viminfo='20,<0,s0,h
+
 " --- Display ---
 set number
 set relativenumber
@@ -23,6 +27,7 @@ let g:netrw_liststyle = 3
 let g:netrw_winsize = 25
 let g:netrw_banner = 0
 let g:netrw_browse_split = 0
+let g:netrw_home = expand('~/.local/share/vim')
 
 " termguicolors (guarded)
 if has('termguicolors') && $TERM !=# 'linux'
@@ -59,7 +64,7 @@ set autoread
 if has('persistent_undo')
   let s:undodir = expand('~/.local/share/vim/undodir')
   if !isdirectory(s:undodir)
-    call mkdir(s:undodir, 'p')
+    call mkdir(s:undodir, 'p', 0700)
   endif
   let &undodir = s:undodir
   set undofile

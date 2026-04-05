@@ -174,7 +174,7 @@ function! s:OpenTerminal() abort
     endif
   endfor
   let l:rcfile = fnamemodify(resolve(expand('<script>:p')), ':h:h') . '/terminal.bashrc'
-  execute 'below terminal ++rows=15 ++close bash --init-file ' . l:rcfile
+  execute 'below terminal ++rows=15 ++close bash --init-file ' . fnameescape(l:rcfile)
 endfunction
 nnoremap <leader>t :call <SID>OpenTerminal()<CR>
 
