@@ -73,7 +73,7 @@ install() {
   printf "${BOLD}${BLUE} (_)${GREEN}\\ \\ / /${BLUE}(_)${GREEN}_ __ ___  ${RESET}\n"
   printf "${BOLD}${BLUE} | | ${GREEN}\\ V / ${BLUE}| | ${GREEN}'_ \` _ \\ ${RESET}\n"
   printf "${BOLD}${BLUE} | |  ${GREEN}\\_/  ${BLUE}| | ${GREEN}| | | | |${RESET}\n"
-  printf "${BOLD}${BLUE} |_|      ${BLUE}|_|${GREEN}_| |_| |_|${RESET}\n"
+  printf "${BOLD}${BLUE} |_|       ${BLUE}|_|${GREEN}_| |_| |_|${RESET}\n"
   printf "\n"
   printf "${BOLD}  Plugin-free Vim with Tokyo Night${RESET}\n"
   printf "\n"

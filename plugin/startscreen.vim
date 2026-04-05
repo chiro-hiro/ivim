@@ -18,7 +18,7 @@ function! s:ShowStartScreen() abort
   call add(l:lines, '')
   call add(l:lines, '      _ __   __ _              ')
   call add(l:lines, '     (_)\ \ / /(_)_ __ ___     ')
-  call add(l:lines, '     | | \ V / | | ''_ ` _ \    ')
+  call add(l:lines, '     | | \ V / | | ''_ ` _ \   ')
   call add(l:lines, '     | |  \_/  | | | | | | |   ')
   call add(l:lines, '     |_|       |_|_| |_| |_|   ')
   call add(l:lines, '')
