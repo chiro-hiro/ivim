@@ -1,5 +1,5 @@
 " iVim - Plugin-free Vim configuration
-" https://github.com/user/ivim
+" https://github.com/chiro-hiro/ivim
 
 " Encoding
 set encoding=utf-8

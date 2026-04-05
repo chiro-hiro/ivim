@@ -7,14 +7,14 @@ if [ "$(id -u)" -eq 0 ]; then
 fi
 
 # iVim online installer
-# Usage: curl -fsSL https://raw.githubusercontent.com/user/ivim/master/get-ivim.sh | bash
-#    or: curl -fsSL https://raw.githubusercontent.com/user/ivim/master/get-ivim.sh | bash -s -- --uninstall
+# Usage: curl -fsSL https://raw.githubusercontent.com/chiro-hiro/ivim/master/get-ivim.sh | bash
+#    or: curl -fsSL https://raw.githubusercontent.com/chiro-hiro/ivim/master/get-ivim.sh | bash -s -- --uninstall
 
 IVIM_DIR="$HOME/.ivim"
 VIM_DIR="$HOME/.vim"
 VIMRC="$HOME/.vimrc"
 UNDO_DIR="$HOME/.local/share/vim/undodir"
-REPO="https://github.com/user/ivim.git"
+REPO="https://github.com/chiro-hiro/ivim.git"
 TIMESTAMP="$(date +%s)"
 
 # --- Colors ---

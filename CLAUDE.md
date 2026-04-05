@@ -101,8 +101,8 @@ Tokyo Night "night" variant. Every highlight group defines both `guifg`/`guibg` 
 
 **Online (curl):**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/<user>/ivim/master/get-ivim.sh | bash
-curl -fsSL https://raw.githubusercontent.com/<user>/ivim/master/get-ivim.sh | bash -s -- --uninstall
+curl -fsSL https://raw.githubusercontent.com/chiro-hiro/ivim/master/get-ivim.sh | bash
+curl -fsSL https://raw.githubusercontent.com/chiro-hiro/ivim/master/get-ivim.sh | bash -s -- --uninstall
 ```
 
 Both installers back up existing `~/.vim` and `~/.vimrc` with timestamps, and verify symlink targets before removing during uninstall.
