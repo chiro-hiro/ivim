@@ -12,7 +12,6 @@ set signcolumn=yes
 set colorcolumn=
 set background=dark
 syntax on
-filetype plugin indent on
 set nowrap
 set scrolloff=8
 set sidescrolloff=8

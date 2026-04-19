@@ -9,5 +9,8 @@ scriptencoding utf-8
 let mapleader = ' '
 let maplocalleader = ' '
 
+" Filetype plugin + indent must load before plugin/ files
+filetype plugin indent on
+
 " Colorscheme
 colorscheme tokyonight
