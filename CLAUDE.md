@@ -149,7 +149,7 @@ Right-click context menu (`plugin/context_menu.vim`) exposes Copy / Cut / Paste 
 - **Visual mode:** Copy / Cut = selection, Paste = replace selection
 - **Insert mode:** Paste only (`<C-r>+`) — Copy/Cut skipped (no selection semantics)
 
-On Vim 8.2.1978+ the trigger uses `<Cmd>popup PopUp<CR>` so insert mode is preserved across the menu; older Vims fall back to `:popup` / `<C-o>:popup`. When `has('clipboard')` is false the mapping echoes the same "Clipboard not available" warning as `<leader>y/p`.
+On Vim 8.2.1978+ the trigger uses `<Cmd>popup PopUp<CR>` so insert mode is preserved across the menu; older Vims fall back to `:popup` / `<C-o>:popup`. Without `+clipboard` the file `finish`es early — no menu, no `<RightRelease>` remap, Vim's default right-click (extend visual selection) is preserved. There is no "clipboard not available" toast; a right-click menu that can't use the system clipboard has no reason to exist.
 
 ## Netrw File Explorer
 
