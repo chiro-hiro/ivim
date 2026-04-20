@@ -22,14 +22,39 @@ usage() {
   echo "  --help, -h   Show this help message"
 }
 
+# Track backups made during this run so we can restore them on interrupt.
+BACKUPS_MADE=()
+
 backup_if_exists() {
   local target="$1"
   if [ -e "$target" ] || [ -L "$target" ]; then
     local backup="${target}.bak.${TIMESTAMP}"
     echo "  Backing up: $target → $backup"
     mv "$target" "$backup"
+    BACKUPS_MADE+=("$target" "$backup")
   fi
 }
+
+# Restore any backups from this run — used by the signal/ERR trap so an
+# interrupted install (killed between mv and ln -s) does not leave the user
+# without a ~/.vim at all.
+restore_on_failure() {
+  local exit_code=$?
+  # Only restore if we exited abnormally AND the install hasn't completed.
+  if [ "$exit_code" -ne 0 ] && [ "${INSTALL_OK:-0}" -ne 1 ]; then
+    local i=0
+    while [ "$i" -lt "${#BACKUPS_MADE[@]}" ]; do
+      local target="${BACKUPS_MADE[$i]}"
+      local backup="${BACKUPS_MADE[$((i + 1))]}"
+      if [ ! -e "$target" ] && [ -e "$backup" ]; then
+        mv "$backup" "$target" 2>/dev/null && \
+          echo "  Rolled back: $backup → $target" >&2
+      fi
+      i=$((i + 2))
+    done
+  fi
+}
+trap restore_on_failure EXIT INT TERM
 
 find_latest_backup() {
   local target="$1"
@@ -78,6 +103,7 @@ install() {
   chmod 700 "$UNDO_DIR"
   echo "  Created: $UNDO_DIR"
 
+  INSTALL_OK=1
   echo ""
   echo "iVim installed successfully!"
 }

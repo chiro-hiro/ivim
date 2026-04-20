@@ -30,14 +30,36 @@ ok()    { printf '%s%s  ok:%s %s\n' "$GREEN" "$BOLD" "$RESET" "$1"; }
 warn()  { printf '%s%swarn:%s %s\n' "$YELLOW" "$BOLD" "$RESET" "$1"; }
 err()   { printf '%s%serror:%s %s\n' "$RED" "$BOLD" "$RESET" "$1" >&2; }
 
+# Track backups so an interrupted install can roll them back (see
+# restore_on_failure below).
+BACKUPS_MADE=()
+
 backup_if_exists() {
   local target="$1"
   if [ -e "$target" ] || [ -L "$target" ]; then
     local backup="${target}.bak.${TIMESTAMP}"
     warn "Backing up $target → $backup"
     mv "$target" "$backup"
+    BACKUPS_MADE+=("$target" "$backup")
   fi
 }
+
+restore_on_failure() {
+  local exit_code=$?
+  if [ "$exit_code" -ne 0 ] && [ "${INSTALL_OK:-0}" -ne 1 ]; then
+    local i=0
+    while [ "$i" -lt "${#BACKUPS_MADE[@]}" ]; do
+      local target="${BACKUPS_MADE[$i]}"
+      local backup="${BACKUPS_MADE[$((i + 1))]}"
+      if [ ! -e "$target" ] && [ -e "$backup" ]; then
+        mv "$backup" "$target" 2>/dev/null && \
+          warn "Rolled back $backup → $target"
+      fi
+      i=$((i + 2))
+    done
+  fi
+}
+trap restore_on_failure EXIT INT TERM
 
 find_latest_backup() {
   local target="$1"
@@ -132,6 +154,7 @@ install() {
   chmod 700 "$UNDO_DIR"
   ok "Created $UNDO_DIR"
 
+  INSTALL_OK=1
   printf "\n"
   printf "${GREEN}${BOLD}iVim installed successfully!${RESET}\n"
   printf "\n"
