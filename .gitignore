@@ -1,7 +1,30 @@
+# Vim-specific runtime artifacts
 undodir/
 .netrwhist
-.DS_Store
+Session.vim
+tags
+.tags
+*.swp
+*.swo
+*.un~
+
+# Editor / merge / OS artifacts
+*.bak
+*.orig
 *.log
 *.tmp
-*.bak
-*.swp
+.DS_Store
+Thumbs.db
+
+# Secrets — never commit
+*.pem
+*.key
+*.p12
+*.pfx
+*.env
+.envrc
+credentials
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
