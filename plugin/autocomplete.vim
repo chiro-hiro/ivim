@@ -57,8 +57,12 @@ function! s:MaybeTrigger() abort
       return
     endif
     call feedkeys("\<C-x>\<C-o>", 'n')
-  " Keyword: 2+ consecutive word chars before cursor (reduces single-char noise)
-  elseif l:ch =~# '\k' && l:col >= 3 && l:line[l:col - 3] =~# '\k'
+  " Keyword: fire only on the second word char of a new word. Re-firing every
+  " keystroke within a word thrashes the popup open/close cycle and stops
+  " the user from typing past suggestions they want to ignore.
+  elseif l:ch =~# '\k'
+        \ && l:col >= 3 && l:line[l:col - 3] =~# '\k'
+        \ && (l:col < 4 || l:line[l:col - 4] !~# '\k')
     call feedkeys("\<C-n>", 'n')
   endif
 endfunction
