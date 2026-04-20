@@ -73,7 +73,22 @@ Leader is Space. Only `<leader>` bindings are added — no default Vim keys are 
 
 ## Colorscheme
 
-Tokyo Night "night" variant. Every highlight group defines both `guifg`/`guibg` and `ctermfg`/`ctermbg`. Custom `Stl*` groups for statusline and `Conceal` for netrw tree. Terminal ANSI colors via `g:terminal_ansi_colors`.
+Tokyo Night "night" variant. Every highlight group defines both `guifg`/`guibg` and `ctermfg`/`ctermbg`. Custom `Stl*` groups for statusline, `Conceal` for netrw tree, and filetype-specific overrides for TOML and YAML (see below). Terminal ANSI colors via `g:terminal_ansi_colors`.
+
+### Filetype-specific highlights (TOML, YAML)
+
+TOML and YAML get explicit overrides so structural elements stand out:
+
+| Element                                                                           | Style         |
+|-----------------------------------------------------------------------------------|---------------|
+| Keys & tables (`tomlKey*`, `tomlTable*`, `yamlBlockMappingKey`, `yamlFlowMappingKey`) | white + bold  |
+| Strings (`tomlString`, `yamlFlowString`)                                          | green         |
+| Numbers & booleans (`tomlInteger`, `tomlFloat`, `tomlBoolean`, `yamlInteger`, `yamlFloat`, `yamlBool`) | orange |
+| Dates, null, doc markers, escapes (`tomlDate`, `tomlEscape`, `yamlNull`, `yamlDocumentStart/End`, `yamlSingleEscape`) | magenta |
+| Anchors, aliases, tags (`yamlAnchor`, `yamlAlias`, `yamlNodeTag`)                 | yellow        |
+| Comments (`tomlComment`, `yamlComment`)                                           | gray italic   |
+
+Other filetypes rely on Vim's default syntax → generic-group links (`String`, `Number`, `Type`, etc.) that the base colorscheme defines.
 
 ## Statusline
 
