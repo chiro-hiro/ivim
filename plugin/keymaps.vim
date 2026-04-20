@@ -72,6 +72,9 @@ endfunction
 
 " Open file in editor window, never in terminal or netrw
 function! IvimNetrwOpenInEditor() abort
+  if !exists('b:netrw_curdir')
+    return
+  endif
   let l:relpath = IvimNetrwGetTreePath()
   if empty(l:relpath)
     return
@@ -162,28 +165,39 @@ endif
 " === Select all ===
 nnoremap <leader>a ggVG
 
-" === Terminal ===
-function! s:OpenTerminal() abort
-  " Move to a non-netrw, non-terminal window before opening
-  for w in range(1, winnr('$'))
-    let l:bt = getbufvar(winbufnr(w), '&buftype')
-    let l:ft = getbufvar(winbufnr(w), '&filetype')
-    if l:bt !=# 'terminal' && l:ft !=# 'netrw'
-      execute w . 'wincmd w'
-      break
-    endif
-  endfor
-  let l:rcfile = fnamemodify(resolve(expand('<script>:p')), ':h:h') . '/terminal.bashrc'
-  execute 'below terminal ++rows=15 ++close bash --init-file ' . fnameescape(l:rcfile)
-endfunction
-nnoremap <leader>t :call <SID>OpenTerminal()<CR>
+" === Terminal (guarded) ===
+if has('terminal')
+  function! s:OpenTerminal() abort
+    " Move to a non-netrw, non-terminal window before opening
+    for w in range(1, winnr('$'))
+      let l:bt = getbufvar(winbufnr(w), '&buftype')
+      let l:ft = getbufvar(winbufnr(w), '&filetype')
+      if l:bt !=# 'terminal' && l:ft !=# 'netrw'
+        execute w . 'wincmd w'
+        break
+      endif
+    endfor
+    let l:rcfile = fnamemodify(resolve(expand('<script>:p')), ':h:h') . '/terminal.bashrc'
+    " Use term_start() with a list to safely pass paths containing spaces
+    " (Vim's :terminal splits the command on whitespace regardless of quoting)
+    below new
+    call term_start(['bash', '--init-file', l:rcfile], {
+          \ 'curwin': 1,
+          \ 'term_rows': 15,
+          \ 'term_finish': 'close',
+          \ })
+  endfunction
+  nnoremap <leader>t :call <SID>OpenTerminal()<CR>
 
-" Clean up netrw mouse mappings that leak into terminal buffers
-augroup ivim_terminal_mouse
-  autocmd!
-  autocmd TerminalOpen * silent! nunmap <buffer> <LeftMouse>
-  autocmd TerminalOpen * silent! nunmap <buffer> <2-LeftMouse>
-augroup END
+  " Clean up netrw mouse mappings that leak into terminal buffers
+  augroup ivim_terminal_mouse
+    autocmd!
+    autocmd TerminalOpen * silent! nunmap <buffer> <LeftMouse>
+    autocmd TerminalOpen * silent! nunmap <buffer> <2-LeftMouse>
+  augroup END
+else
+  nnoremap <leader>t :echo 'Terminal not available: Vim compiled without +terminal'<CR>
+endif
 
 " === Tabs ===
 nnoremap <leader>Tn :tabnew<CR>
