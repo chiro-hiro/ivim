@@ -19,6 +19,13 @@ augroup ivim_terminal_cleanup
   autocmd!
   autocmd QuitPre * call s:CloseTerminals()
 augroup END
+
+" Exit insert mode when entering a non-modifiable buffer (e.g. via mouse
+" click into netrw). Without this, the next keystroke errors with E21.
+augroup ivim_stopinsert_unmodifiable
+  autocmd!
+  autocmd BufEnter,WinEnter * if !&modifiable && mode() =~# '^[iR]' | stopinsert | endif
+augroup END
 nnoremap <leader>bn :bnext<CR>
 nnoremap <leader>bp :bprevious<CR>
 nnoremap <leader>bd :bdelete<CR>
