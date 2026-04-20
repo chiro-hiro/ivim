@@ -153,7 +153,7 @@ Full implementation of the Tokyo Night "night" palette with both true color (`te
 
 ### Autocomplete
 
-IDE-style auto-completion with zero plugins. Typing 2+ identifier characters pops up a keyword-completion menu from the current file and open buffers; language trigger characters (`.`, `::`, `->`, `<`, `:`, `$`) invoke Vim's built-in filetype `omnifunc`. Disabled automatically in prose filetypes (markdown, gitcommit, plain text, help).
+IDE-style auto-completion with zero plugins. Typing 2+ identifier characters pops up a keyword-completion menu from the current file and open buffers; language trigger characters (`.`, `:`, `>`, `<`, `/`, `$`) invoke Vim's built-in filetype `omnifunc`. Disabled automatically in prose filetypes (markdown, gitcommit, plain text, help).
 
 ### Filetype Support
 

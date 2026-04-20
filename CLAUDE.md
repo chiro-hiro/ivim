@@ -184,7 +184,7 @@ Notable per-type extras:
 - `scriptencoding utf-8` is declared in `vimrc` only; other files rely on it being set first
 - All settings in `plugin/` use global `set`; all ftplugin settings use `setlocal`
 - Script-local functions use `s:` prefix; global functions use topic prefixes: `Stl` (statusline), `Ivim` (everything else)
-- Cross-file buffer-local state uses `b:ivim_*` prefix (e.g. `b:ivim_complete_triggers`, `b:ivim_git_branch`)
+- Cross-file buffer-local state uses `b:ivim_*` prefix (e.g. `b:ivim_complete_triggers`, `b:ivim_autocomplete_disable`)
 - `plugin/*.vim` files carry a one-line comment header; `after/ftplugin/*.vim` files have no header
 - User input passed to `execute` must escape `/`, `\`, and `|`
 - Install scripts use `set -euo pipefail`, quote all variables, verify symlink targets, refuse to run as root
