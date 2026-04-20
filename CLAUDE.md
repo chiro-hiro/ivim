@@ -9,10 +9,11 @@ ivim/
 ├── vimrc                     # Entry point: encoding, leader (Space), colorscheme
 ├── colors/tokyonight.vim     # Tokyo Night (night) colorscheme — gui + cterm256
 ├── plugin/
-│   ├── settings.vim          # Core editor settings with feature guards
+│   ├── autocomplete.vim      # IDE-style auto-completion engine + popup keymaps
 │   ├── keymaps.vim           # Key mappings (Space leader), terminal, search
-│   ├── statusline.vim        # Custom statusline + tabline with mode colors
-│   └── startscreen.vim       # Start screen with keymap help on empty Vim launch
+│   ├── settings.vim          # Core editor settings with feature guards
+│   ├── startscreen.vim       # Start screen with keymap help on empty Vim launch
+│   └── statusline.vim        # Custom statusline + tabline with mode colors
 ├── after/ftplugin/           # Per-language overrides (15 filetypes + netrw)
 ├── assets/ivim.png           # Screenshot used in README.md
 ├── terminal.bashrc           # Tokyo Night bash prompt for Vim terminal
@@ -27,8 +28,8 @@ ivim/
 
 - Uses Vim's native runtime path auto-loading: `colors/`, `plugin/`, `after/ftplugin/`
 - No manual sourcing in vimrc — Vim loads everything automatically
-- `plugin/` files load alphabetically: keymaps.vim, settings.vim, startscreen.vim, statusline.vim
-- `vimrc` runs first: sets `encoding=utf-8`, `scriptencoding utf-8`, `mapleader`/`maplocalleader` (both Space), then loads colorscheme
+- `plugin/` files load alphabetically: autocomplete.vim, keymaps.vim, settings.vim, startscreen.vim, statusline.vim
+- `vimrc` runs first: sets `encoding=utf-8`, `scriptencoding utf-8`, `mapleader`/`maplocalleader` (both Space), enables `filetype plugin indent on` (must precede plugin/ so ftplugin's FileType autocmd registers first), then loads colorscheme
 - Targets Vim 8.0+ with graceful degradation on minimal builds
 
 ## Feature Guards
@@ -42,6 +43,7 @@ All optional features are guarded with `has()` checks:
 | `mouse`                  | `has('mouse')`                                  | settings.vim     |
 | `clipboard`              | `has('clipboard')`                              | keymaps.vim      |
 | `terminal_ansi_colors`   | `has('terminal')`                               | tokyonight.vim   |
+| `complete_info()`        | `has('patch-8.0.1775')`                         | autocomplete.vim |
 | `%{%...%}` syntax        | `has('patch-8.2.2854')`                         | statusline.vim   |
 
 ## Key Mappings
@@ -81,6 +83,44 @@ Tokyo Night "night" variant. Every highlight group defines both `guifg`/`guibg` 
 - Dynamic mode highlight colors on Vim 8.2.2854+, static fallback on older versions
 - Custom tabline showing filename only (no buffer numbers)
 - `Stl*` highlight groups include `StlModeNormal`, `StlModeInsert`, `StlModeVisual`, `StlModeReplace`, `StlModeCommand`
+
+## Autocomplete
+
+IDE-style auto-completion via `plugin/autocomplete.vim`. As you type in insert mode, a popup appears automatically: word characters (≥2 prefix) trigger keyword completion (`<C-n>`) from the current file and other open buffers; filetype-configured trigger characters (`.`, `::`, `->`, etc.) trigger `omnifunc` (`<C-x><C-o>`). Disabled in prose filetypes (markdown, gitcommit, text, help) — those buffers get no `TextChangedI` autocmd attached at all.
+
+### Popup navigation
+
+| Key      | Popup visible                                    | Popup not visible |
+|----------|--------------------------------------------------|-------------------|
+| `<Tab>`  | Next item                                        | Tab/indent        |
+| `<S-Tab>`| Previous item                                    | Normal `<S-Tab>`  |
+| `<CR>`   | Accept selection (only if item highlighted)      | Newline           |
+| `<Esc>`  | Cancel popup and exit insert mode                | Exit insert mode  |
+
+All four are `<expr>` mappings guarded by `pumvisible()`; when no popup is up, original behavior is preserved.
+
+### Buffer-local contract
+
+Any ftplugin can influence the engine by setting these before `FileType` fires:
+
+| Variable                      | Purpose                                              |
+|-------------------------------|------------------------------------------------------|
+| `b:ivim_autocomplete_disable` | Set to `1` to skip the engine entirely for the buffer |
+| `b:ivim_complete_triggers`    | List of characters that fire omnifunc dispatch (default `['.']`; empty list = keyword-only) |
+
+The engine caches `b:ivim_trigger_pattern` (precompiled regex class) and `b:ivim_has_omnifunc` (cached `!empty(&omnifunc)`) on `FileType` so the per-keystroke hot path does minimal work.
+
+### Omnifunc mapping
+
+| Filetype group                                        | omnifunc                         |
+|-------------------------------------------------------|----------------------------------|
+| python                                                | `python3complete#Complete` (fallback to `syntaxcomplete#Complete` if no `+python3`) |
+| c, cpp                                                | `ccomplete#Complete`             |
+| javascript, typescript                                | `javascriptcomplete#CompleteJS`  |
+| css                                                   | `csscomplete#CompleteCSS`        |
+| html                                                  | `htmlcomplete#CompleteTags`      |
+| rust, lua, sh, dockerfile, json, toml, yaml           | `syntaxcomplete#Complete`        |
+| markdown                                              | — (disabled)                     |
 
 ## Netrw File Explorer
 
@@ -144,6 +184,7 @@ Notable per-type extras:
 - `scriptencoding utf-8` is declared in `vimrc` only; other files rely on it being set first
 - All settings in `plugin/` use global `set`; all ftplugin settings use `setlocal`
 - Script-local functions use `s:` prefix; global functions use topic prefixes: `Stl` (statusline), `Ivim` (everything else)
+- Cross-file buffer-local state uses `b:ivim_*` prefix (e.g. `b:ivim_complete_triggers`, `b:ivim_git_branch`)
 - `plugin/*.vim` files carry a one-line comment header; `after/ftplugin/*.vim` files have no header
 - User input passed to `execute` must escape `/`, `\`, and `|`
 - Install scripts use `set -euo pipefail`, quote all variables, verify symlink targets, refuse to run as root
