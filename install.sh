@@ -33,14 +33,23 @@ backup_if_exists() {
 
 find_latest_backup() {
   local target="$1"
-  # Find the most recent .bak.* file by timestamp suffix
+  # Find the most recent .bak.* file by timestamp suffix.
+  # Rejects non-integer suffixes (crafted filenames) and files not owned by
+  # the current user (TOCTOU / shared-HOME attack where a different user
+  # plants ~/.vim.bak.<big_ts> → hostile symlink, intending to be picked up
+  # on the next uninstall-and-restore).
   local latest=""
   local latest_ts=0
-  # nullglob: an unmatched glob yields zero iterations instead of a literal string
   shopt -s nullglob
   for f in "${target}.bak."*; do
     local ts="${f##*.bak.}"
-    if [ "$ts" -gt "$latest_ts" ] 2>/dev/null; then
+    if ! [[ "$ts" =~ ^[0-9]+$ ]]; then
+      continue
+    fi
+    if [ ! -O "$f" ]; then
+      continue
+    fi
+    if [ "$ts" -gt "$latest_ts" ]; then
       latest_ts="$ts"
       latest="$f"
     fi

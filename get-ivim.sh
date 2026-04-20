@@ -41,12 +41,21 @@ backup_if_exists() {
 
 find_latest_backup() {
   local target="$1"
+  # See install.sh:find_latest_backup for the rationale behind the integer
+  # and ownership checks — guards against TOCTOU backup-spoofing on a
+  # shared-HOME system.
   local latest=""
   local latest_ts=0
   shopt -s nullglob
   for f in "${target}.bak."*; do
     local ts="${f##*.bak.}"
-    if [ "$ts" -gt "$latest_ts" ] 2>/dev/null; then
+    if ! [[ "$ts" =~ ^[0-9]+$ ]]; then
+      continue
+    fi
+    if [ ! -O "$f" ]; then
+      continue
+    fi
+    if [ "$ts" -gt "$latest_ts" ]; then
       latest_ts="$ts"
       latest="$f"
     fi
