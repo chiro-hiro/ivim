@@ -46,6 +46,8 @@ hi Special      guifg=#7dcfff guibg=NONE    ctermfg=117 ctermbg=NONE
 hi Delimiter    guifg=#c0caf5 guibg=NONE    ctermfg=189 ctermbg=NONE
 hi Error        guifg=#f7768e guibg=NONE    ctermfg=204 ctermbg=NONE
 hi Todo         guifg=#e0af68 guibg=NONE    ctermfg=179 ctermbg=NONE gui=bold cterm=bold
+hi ModeMsg      guifg=#9ece6a guibg=NONE    ctermfg=149 ctermbg=NONE gui=bold cterm=bold
+hi Underlined   guifg=#7aa2f7 guibg=NONE    ctermfg=111 ctermbg=NONE gui=underline cterm=underline
 
 " --- UI ---
 hi CursorLine   guifg=NONE    guibg=#292e42 ctermfg=NONE ctermbg=236 cterm=NONE
