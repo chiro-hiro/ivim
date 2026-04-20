@@ -50,6 +50,12 @@ function! s:MaybeTrigger() abort
   if b:ivim_has_omnifunc
         \ && !empty(b:ivim_trigger_pattern)
         \ && l:ch =~# b:ivim_trigger_pattern
+    " Skip duplicates like :: .. >> — omnifunc already fired on the first
+    " char; re-firing on the second wastes time and can leave Vim stuck
+    " in a confused completion state while typeahead drains.
+    if l:col >= 3 && l:line[l:col - 3] ==# l:ch
+      return
+    endif
     call feedkeys("\<C-x>\<C-o>", 'n')
   " Keyword: 2+ consecutive word chars before cursor (reduces single-char noise)
   elseif l:ch =~# '\k' && l:col >= 3 && l:line[l:col - 3] =~# '\k'
