@@ -1,10 +1,14 @@
 # iVim terminal — Tokyo Night prompt
 
-# Prevent infinite recursion if ~/.bashrc ends up sourcing us back
+# Prevent infinite recursion if ~/.bashrc ends up sourcing us back.
+# Deliberately NOT exported: the guard only needs to protect the current
+# bash process from re-sourcing itself during ~/.bashrc loading. Exporting
+# would leak the flag to every child process the user spawns, which
+# subprocesses could introspect to detect the iVim terminal context.
 if [ -n "${_IVIM_TERMINAL_SOURCED:-}" ]; then
   return 0 2>/dev/null || exit 0
 fi
-export _IVIM_TERMINAL_SOURCED=1
+_IVIM_TERMINAL_SOURCED=1
 
 # Resolve git's absolute path BEFORE sourcing /etc/profile or ~/.bashrc so
 # PATH manipulation in those files cannot substitute a malicious git binary
