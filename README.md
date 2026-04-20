@@ -24,6 +24,8 @@ When you SSH into a production server, audit a remote system, or work inside a h
 
 ## Install
 
+> **Before running any `curl | bash` installer, inspect the script**: [`get-ivim.sh`](https://github.com/chiro-hiro/ivim/blob/master/get-ivim.sh). iVim does not ship pinned versions or signed commits — running the one-liner always installs the current `master`. If you prefer, use the local-install path below after reviewing the repo.
+
 ### One-line install (from GitHub)
 
 ```bash
