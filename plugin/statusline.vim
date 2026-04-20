@@ -1,24 +1,44 @@
 " Custom statusline for iVim
 " Uses autocommands for active/inactive window differentiation
-" Git branch cached in b:git_branch via BufEnter/FocusGained/ShellCmdPost
+" Git branch cached per-directory in s:branch_cache so N buffers in the same
+" repo cost 1 system() call total; cache is invalidated on ShellCmdPost.
 
 " --- Git branch caching ---
+let s:branch_cache = {}
+
 function! s:UpdateGitBranch() abort
   if !executable('git')
     let b:git_branch = ''
     return
   endif
-  let l:branch = system('git rev-parse --abbrev-ref HEAD 2>/dev/null')
-  if v:shell_error
+  let l:dir = expand('%:p:h')
+  if empty(l:dir)
     let b:git_branch = ''
-  else
-    let b:git_branch = substitute(l:branch, '\n', '', 'g')
+    return
   endif
+  if has_key(s:branch_cache, l:dir)
+    let b:git_branch = s:branch_cache[l:dir]
+    return
+  endif
+  let l:branch = system('git -C ' . shellescape(l:dir) . ' rev-parse --abbrev-ref HEAD 2>/dev/null')
+  if v:shell_error
+    let l:branch = ''
+  else
+    let l:branch = substitute(l:branch, '\n', '', 'g')
+  endif
+  let s:branch_cache[l:dir] = l:branch
+  let b:git_branch = l:branch
+endfunction
+
+function! s:InvalidateBranchCache() abort
+  let s:branch_cache = {}
+  call s:UpdateGitBranch()
 endfunction
 
 augroup ivim_statusline
   autocmd!
-  autocmd BufEnter,ShellCmdPost * call s:UpdateGitBranch()
+  autocmd BufEnter * call s:UpdateGitBranch()
+  autocmd ShellCmdPost * call s:InvalidateBranchCache()
   autocmd WinEnter,BufWinEnter * call s:SetActiveStatusline()
   autocmd WinLeave * call s:SetInactiveStatusline()
 augroup END
