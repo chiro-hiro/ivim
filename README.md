@@ -102,6 +102,7 @@ Leader key is **Space**. iVim only adds new bindings -- no default Vim keys are 
 |-----|--------|
 | `Space y` | Yank to system clipboard |
 | `Space p` | Paste from system clipboard |
+| `Right-click` | Context menu — Copy / Cut / Paste (uses system clipboard) |
 
 ### Tabs
 

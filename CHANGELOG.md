@@ -8,6 +8,7 @@ This project adheres to [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ### Added
 
+- **Right-click context menu** (`plugin/context_menu.vim`) — Copy / Cut / Paste via Vim's native `PopUp` menu, bound to `<RightRelease>` in normal, visual, and insert modes. All operations route through the `+` register (system clipboard); guarded by `has('clipboard')` with the same fallback warning as `<leader>y/p`. Uses `<Cmd>popup` on Vim 8.2.1978+ to preserve insert mode across the menu.
 - **IDE-style autocomplete** (`plugin/autocomplete.vim`) — popup auto-triggers as you type. Word characters (2+ prefix) fire keyword completion from the current file and open buffers; language-specific trigger characters (`.`, `>`, `<`, `:`, `/`, `$`) fire Vim's built-in `omnifunc`. Configured for 15 filetypes (c, cpp, css, dockerfile, html, javascript, json, lua, python, rust, sh, toml, typescript, yaml) plus markdown opt-out. Pure Vimscript, plugin-free.
 - **Popup navigation keymaps** — `<Tab>` / `<S-Tab>` navigate, `<CR>` accepts a selected item (no newline), `<Esc>` dismisses popup + exits insert mode. All context-sensitive (`<expr>` guarded by `pumvisible()`); original key behaviour preserved when no popup is showing.
 - **Start screen autocomplete section** — the splash screen's keymap reference now includes an "AUTOCOMPLETE (popup)" block.

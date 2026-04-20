@@ -10,6 +10,7 @@ ivim/
 ├── colors/tokyonight.vim     # Tokyo Night (night) colorscheme — gui + cterm256
 ├── plugin/
 │   ├── autocomplete.vim      # IDE-style auto-completion engine + popup keymaps
+│   ├── context_menu.vim      # Right-click Copy/Cut/Paste menu (PopUp)
 │   ├── keymaps.vim           # Key mappings (Space leader), terminal, search
 │   ├── settings.vim          # Core editor settings with feature guards
 │   ├── startscreen.vim       # Start screen with keymap help on empty Vim launch
@@ -28,7 +29,7 @@ ivim/
 
 - Uses Vim's native runtime path auto-loading: `colors/`, `plugin/`, `after/ftplugin/`
 - No manual sourcing in vimrc — Vim loads everything automatically
-- `plugin/` files load alphabetically: autocomplete.vim, keymaps.vim, settings.vim, startscreen.vim, statusline.vim
+- `plugin/` files load alphabetically: autocomplete.vim, context_menu.vim, keymaps.vim, settings.vim, startscreen.vim, statusline.vim
 - `vimrc` runs first: sets `encoding=utf-8`, `scriptencoding utf-8`, `mapleader`/`maplocalleader` (both Space), enables `filetype plugin indent on` (must precede plugin/ so ftplugin's FileType autocmd registers first), then loads colorscheme
 - Targets Vim 8.0+ with graceful degradation on minimal builds
 
@@ -41,7 +42,8 @@ All optional features are guarded with `has()` checks:
 | `termguicolors`          | `has('termguicolors')` + `$TERM != 'linux'`    | settings.vim     |
 | `persistent_undo`        | `has('persistent_undo')`                        | settings.vim     |
 | `mouse`                  | `has('mouse')`                                  | settings.vim     |
-| `clipboard`              | `has('clipboard')`                              | keymaps.vim      |
+| `clipboard`              | `has('clipboard')`                              | keymaps.vim, context_menu.vim |
+| `<Cmd>` keymap prefix    | `has('patch-8.2.1978')`                         | context_menu.vim |
 | `terminal_ansi_colors`   | `has('terminal')`                               | tokyonight.vim   |
 | terminal keymap `<leader>t` | `has('terminal')`                            | keymaps.vim      |
 | `complete_info()`        | `has('patch-8.0.1775')`                         | autocomplete.vim |
@@ -138,6 +140,16 @@ The engine caches `b:ivim_trigger_pattern` (precompiled regex class) and `b:ivim
 | html                                                  | `htmlcomplete#CompleteTags`      |
 | rust, lua, sh, dockerfile, json, toml, yaml           | `syntaxcomplete#Complete`        |
 | markdown                                              | — (disabled)                     |
+
+## Context Menu
+
+Right-click context menu (`plugin/context_menu.vim`) exposes Copy / Cut / Paste via Vim's native `PopUp` mechanism (`:popup PopUp` triggered by `<RightRelease>`). All operations go through the `+` register (system clipboard).
+
+- **Normal mode:** Copy = yank current line, Cut = delete current line, Paste = paste after cursor
+- **Visual mode:** Copy / Cut = selection, Paste = replace selection
+- **Insert mode:** Paste only (`<C-r>+`) — Copy/Cut skipped (no selection semantics)
+
+On Vim 8.2.1978+ the trigger uses `<Cmd>popup PopUp<CR>` so insert mode is preserved across the menu; older Vims fall back to `:popup` / `<C-o>:popup`. When `has('clipboard')` is false the mapping echoes the same "Clipboard not available" warning as `<leader>y/p`.
 
 ## Netrw File Explorer
 
