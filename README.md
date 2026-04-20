@@ -108,6 +108,17 @@ Leader key is **Space**. iVim only adds new bindings -- no default Vim keys are 
 | `Space Tn` | New tab |
 | `Space Tc` | Close tab |
 
+### Autocomplete (popup menu)
+
+Popup appears automatically in code buffers as you type; these keys take effect only when the popup is visible, otherwise behave normally.
+
+| Key | Action |
+|-----|--------|
+| `Tab` | Next completion item |
+| `Shift-Tab` | Previous completion item |
+| `Enter` | Accept selection (no newline inserted) |
+| `Esc` | Cancel popup and exit insert mode |
+
 ### Other
 
 | Key | Action |
@@ -140,9 +151,13 @@ Full implementation of the Tokyo Night "night" palette with both true color (`te
 - Tokyo Night bash prompt with `user@host`, directory, and git branch
 - Auto-closes on quit -- no "job still running" errors
 
+### Autocomplete
+
+IDE-style auto-completion with zero plugins. Typing 2+ identifier characters pops up a keyword-completion menu from the current file and open buffers; language trigger characters (`.`, `::`, `->`, `<`, `:`, `$`) invoke Vim's built-in filetype `omnifunc`. Disabled automatically in prose filetypes (markdown, gitcommit, plain text, help).
+
 ### Filetype Support
 
-Sensible defaults for 13 languages:
+Sensible defaults for 15 languages:
 
 | 2-space indent | 4-space indent |
 |---------------|---------------|
@@ -151,8 +166,9 @@ Sensible defaults for 13 languages:
 | HTML | C++ (cinoptions) |
 | CSS | Rust (tw=100) |
 | JSON | Shell |
-| YAML | |
+| YAML | Dockerfile |
 | Lua | |
+| TOML | |
 | Markdown (wrap, linebreak) | |
 
 ### Feature Guards
@@ -174,11 +190,12 @@ ivim/
 ├── vimrc                     # Entry point: encoding, leader, colorscheme
 ├── colors/tokyonight.vim     # Tokyo Night colorscheme (gui + cterm256)
 ├── plugin/
-│   ├── settings.vim          # Core editor settings with feature guards
+│   ├── autocomplete.vim      # IDE-style auto-completion engine
 │   ├── keymaps.vim           # Key mappings, terminal, file explorer logic
-│   ├── statusline.vim        # Statusline, tabline, git branch caching
-│   └── startscreen.vim       # Start screen with keymap reference
-├── after/ftplugin/           # Per-language overrides (13 filetypes + netrw)
+│   ├── settings.vim          # Core editor settings with feature guards
+│   ├── startscreen.vim       # Start screen with keymap reference
+│   └── statusline.vim        # Statusline, tabline, git branch caching
+├── after/ftplugin/           # Per-language overrides (15 filetypes + netrw)
 ├── terminal.bashrc           # Tokyo Night bash prompt for Vim terminal
 ├── install.sh                # Local installer (symlink-based)
 └── get-ivim.sh               # Online installer (curl | bash)
