@@ -17,13 +17,13 @@ UNDO_DIR="$HOME/.local/share/vim/undodir"
 REPO="https://github.com/chiro-hiro/ivim.git"
 TIMESTAMP="$(date +%s)"
 
-# --- Colors ---
-BOLD='\033[1m'
-GREEN='\033[32m'
-BLUE='\033[34m'
-YELLOW='\033[33m'
-RED='\033[31m'
-RESET='\033[0m'
+# --- Colors (ANSI-C quoting: vars contain real ESC bytes, not literal \033) ---
+BOLD=$'\033[1m'
+GREEN=$'\033[32m'
+BLUE=$'\033[34m'
+YELLOW=$'\033[33m'
+RED=$'\033[31m'
+RESET=$'\033[0m'
 
 info()  { printf '%s%sinfo:%s %s\n' "$BLUE" "$BOLD" "$RESET" "$1"; }
 ok()    { printf '%s%s  ok:%s %s\n' "$GREEN" "$BOLD" "$RESET" "$1"; }
