@@ -1,0 +1,63 @@
+" IDE-style auto-completion engine
+" Dispatches between keyword completion (<C-n>) and omnifunc (<C-x><C-o>)
+" based on the last character typed in insert mode.
+
+set completeopt=menuone,noinsert,noselect
+set shortmess+=c
+set pumheight=10
+
+" Prose filetypes: autocomplete is disabled entirely.
+let s:prose_filetypes = {'markdown': 1, 'gitcommit': 1, 'text': 1, 'help': 1}
+
+" Per-buffer setup runs once on FileType. It:
+"   - Bails out for prose filetypes and buffers with the disable flag
+"   - Precompiles b:ivim_complete_triggers into a regex char class
+"   - Caches whether omnifunc is set
+"   - Installs a <buffer>-local TextChangedI autocmd so disabled
+"     buffers pay zero per-keystroke cost
+function! s:SetupBuffer() abort
+  if get(b:, 'ivim_autocomplete_disable', 0)
+    return
+  endif
+  if has_key(s:prose_filetypes, &filetype)
+    return
+  endif
+
+  let l:triggers = get(b:, 'ivim_complete_triggers', ['.'])
+  let b:ivim_trigger_pattern =
+        \ empty(l:triggers)
+        \ ? ''
+        \ : '[' . escape(join(l:triggers, ''), ']\^-') . ']'
+  let b:ivim_has_omnifunc = !empty(&omnifunc)
+
+  augroup ivim_autocomplete_buf
+    autocmd! * <buffer>
+    autocmd TextChangedI <buffer> call <SID>MaybeTrigger()
+  augroup END
+endfunction
+
+function! s:MaybeTrigger() abort
+  if pumvisible()
+    return
+  endif
+  let l:col = col('.')
+  if l:col < 2
+    return
+  endif
+  let l:line = getline('.')
+  let l:ch = l:line[l:col - 2]
+
+  if b:ivim_has_omnifunc
+        \ && !empty(b:ivim_trigger_pattern)
+        \ && l:ch =~# b:ivim_trigger_pattern
+    call feedkeys("\<C-x>\<C-o>", 'n')
+  " Keyword: 2+ consecutive word chars before cursor (reduces single-char noise)
+  elseif l:ch =~# '\k' && l:col >= 3 && l:line[l:col - 3] =~# '\k'
+    call feedkeys("\<C-n>", 'n')
+  endif
+endfunction
+
+augroup ivim_autocomplete
+  autocmd!
+  autocmd FileType * call s:SetupBuffer()
+augroup END
