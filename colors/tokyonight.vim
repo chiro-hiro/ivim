@@ -112,3 +112,35 @@ if has('terminal')
         \ '#7aa2f7', '#9d7cd8', '#2ac3de', '#c0caf5',
         \ ]
 endif
+
+" --- Filetype: TOML ---
+" Keys and tables are the structural anchors — white + bold.
+hi tomlTable      guifg=#c0caf5 guibg=NONE    ctermfg=189 ctermbg=NONE gui=bold cterm=bold
+hi tomlTableArray guifg=#c0caf5 guibg=NONE    ctermfg=189 ctermbg=NONE gui=bold cterm=bold
+hi tomlKey        guifg=#c0caf5 guibg=NONE    ctermfg=189 ctermbg=NONE gui=bold cterm=bold
+hi tomlKeyDq      guifg=#c0caf5 guibg=NONE    ctermfg=189 ctermbg=NONE gui=bold cterm=bold
+hi tomlKeySq      guifg=#c0caf5 guibg=NONE    ctermfg=189 ctermbg=NONE gui=bold cterm=bold
+hi tomlString     guifg=#9ece6a guibg=NONE    ctermfg=149 ctermbg=NONE
+hi tomlInteger    guifg=#ff9e64 guibg=NONE    ctermfg=209 ctermbg=NONE
+hi tomlFloat      guifg=#ff9e64 guibg=NONE    ctermfg=209 ctermbg=NONE
+hi tomlBoolean    guifg=#ff9e64 guibg=NONE    ctermfg=209 ctermbg=NONE
+hi tomlDate       guifg=#9d7cd8 guibg=NONE    ctermfg=140 ctermbg=NONE
+hi tomlEscape     guifg=#9d7cd8 guibg=NONE    ctermfg=140 ctermbg=NONE
+hi tomlComment    guifg=#565f89 guibg=NONE    ctermfg=60  ctermbg=NONE gui=italic cterm=italic
+
+" --- Filetype: YAML ---
+" Keys are the structural anchors — white + bold.
+hi yamlBlockMappingKey guifg=#c0caf5 guibg=NONE ctermfg=189 ctermbg=NONE gui=bold cterm=bold
+hi yamlFlowMappingKey  guifg=#c0caf5 guibg=NONE ctermfg=189 ctermbg=NONE gui=bold cterm=bold
+hi yamlBool            guifg=#ff9e64 guibg=NONE ctermfg=209 ctermbg=NONE
+hi yamlInteger         guifg=#ff9e64 guibg=NONE ctermfg=209 ctermbg=NONE
+hi yamlFloat           guifg=#ff9e64 guibg=NONE ctermfg=209 ctermbg=NONE
+hi yamlNull            guifg=#9d7cd8 guibg=NONE ctermfg=140 ctermbg=NONE
+hi yamlDocumentStart   guifg=#9d7cd8 guibg=NONE ctermfg=140 ctermbg=NONE
+hi yamlDocumentEnd     guifg=#9d7cd8 guibg=NONE ctermfg=140 ctermbg=NONE
+hi yamlAnchor          guifg=#e0af68 guibg=NONE ctermfg=179 ctermbg=NONE
+hi yamlAlias           guifg=#e0af68 guibg=NONE ctermfg=179 ctermbg=NONE
+hi yamlNodeTag         guifg=#e0af68 guibg=NONE ctermfg=179 ctermbg=NONE
+hi yamlFlowString      guifg=#9ece6a guibg=NONE ctermfg=149 ctermbg=NONE
+hi yamlSingleEscape    guifg=#9d7cd8 guibg=NONE ctermfg=140 ctermbg=NONE
+hi yamlComment         guifg=#565f89 guibg=NONE ctermfg=60  ctermbg=NONE gui=italic cterm=italic

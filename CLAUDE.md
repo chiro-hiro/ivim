@@ -183,6 +183,7 @@ Notable per-type extras:
 - Vimscript only — no plugins, no Lua, no external dependencies
 - `scriptencoding utf-8` is declared in `vimrc` only; other files rely on it being set first
 - All settings in `plugin/` use global `set`; all ftplugin settings use `setlocal`
+- No hard tabs for indentation — global `set expandtab` plus each ftplugin repeats `setlocal expandtab`; autoindent is enabled globally (`set autoindent` + `filetype plugin indent on`) so every Vim-shipped language gets smart indentation
 - Script-local functions use `s:` prefix; global functions use topic prefixes: `Stl` (statusline), `Ivim` (everything else)
 - Cross-file buffer-local state uses `b:ivim_*` prefix (e.g. `b:ivim_complete_triggers`, `b:ivim_autocomplete_disable`)
 - `plugin/*.vim` files carry a one-line comment header; `after/ftplugin/*.vim` files have no header
