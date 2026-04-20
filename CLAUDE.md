@@ -43,6 +43,7 @@ All optional features are guarded with `has()` checks:
 | `mouse`                  | `has('mouse')`                                  | settings.vim     |
 | `clipboard`              | `has('clipboard')`                              | keymaps.vim      |
 | `terminal_ansi_colors`   | `has('terminal')`                               | tokyonight.vim   |
+| terminal keymap `<leader>t` | `has('terminal')`                            | keymaps.vim      |
 | `complete_info()`        | `has('patch-8.0.1775')`                         | autocomplete.vim |
 | `%{%...%}` syntax        | `has('patch-8.2.2854')`                         | statusline.vim   |
 
@@ -95,7 +96,7 @@ Other filetypes rely on Vim's default syntax → generic-group links (`String`, 
 
 - Uses `%{...}` expressions (not `%!`) for correct per-window evaluation
 - Active/inactive window differentiation via `WinEnter`/`WinLeave`/`BufWinEnter` autocommands; inactive statusline is hardcoded to `NORMAL` label
-- Git branch cached in `b:git_branch` on `BufEnter`/`ShellCmdPost` — never calls `system()` during render
+- Git branch cached per-directory in script-local `s:branch_cache` dict (keyed by `expand('%:p:h')`); `b:git_branch` is set on `BufEnter` from the cache. N buffers in the same repo cost one `system('git -C <dir> rev-parse …')` call; cache is cleared on `ShellCmdPost` so `:!git …` refreshes the statusline. No `system()` during render.
 - Dynamic mode highlight colors on Vim 8.2.2854+, static fallback on older versions
 - Custom tabline showing filename only (no buffer numbers)
 - `Stl*` highlight groups include `StlModeNormal`, `StlModeInsert`, `StlModeVisual`, `StlModeReplace`, `StlModeCommand`
@@ -149,9 +150,11 @@ The engine caches `b:ivim_trigger_pattern` (precompiled regex class) and `b:ivim
 
 ## Terminal
 
-- Opens below with fixed `++rows=15 ++close`
-- Launches bash with `--init-file terminal.bashrc` for Tokyo Night prompt
+- Opens below with fixed 15 rows and `term_finish='close'`
+- Entire `<leader>t` keymap block is guarded by `has('terminal')`; on minimal Vim builds the keymap prints a warning instead of erroring
+- Uses `term_start(['bash', '--init-file', l:rcfile], {…})` with a list argument — NOT `:execute 'below terminal …'` — so paths containing spaces do not misparse (Vim's `:terminal` splits its command on whitespace regardless of quoting)
 - `terminal.bashrc` sources `/etc/profile` and `~/.bashrc` first (full user env inherited), then sets a green-user / cyan-host / blue-cwd / purple-branch prompt using a nerd-font branch glyph; detached HEAD renders as `detached:<short-SHA>`
+- `terminal.bashrc` guards against recursive sourcing via `_IVIM_TERMINAL_SOURCED` so any `~/.bashrc` loop is a no-op on re-entry
 - Auto-closes terminal buffers on quit (`QuitPre` autocommand)
 - `ivim_terminal_mouse` autogroup clears netrw mouse mappings that would otherwise leak into the terminal buffer
 - ANSI colors set via `g:terminal_ansi_colors` in colorscheme (guarded by `has('terminal')`)
