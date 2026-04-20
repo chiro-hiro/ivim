@@ -114,9 +114,10 @@ if has('terminal')
 endif
 
 " --- Filetype: TOML ---
-" Keys and tables are the structural anchors — white + bold.
-hi tomlTable      guifg=#c0caf5 guibg=NONE    ctermfg=189 ctermbg=NONE gui=bold cterm=bold
-hi tomlTableArray guifg=#c0caf5 guibg=NONE    ctermfg=189 ctermbg=NONE gui=bold cterm=bold
+" Keys are white + bold; tables (section headers) stay blue + bold to
+" preserve visual hierarchy between sections and their contents.
+hi tomlTable      guifg=#7aa2f7 guibg=NONE    ctermfg=111 ctermbg=NONE gui=bold cterm=bold
+hi tomlTableArray guifg=#7aa2f7 guibg=NONE    ctermfg=111 ctermbg=NONE gui=bold cterm=bold
 hi tomlKey        guifg=#c0caf5 guibg=NONE    ctermfg=189 ctermbg=NONE gui=bold cterm=bold
 hi tomlKeyDq      guifg=#c0caf5 guibg=NONE    ctermfg=189 ctermbg=NONE gui=bold cterm=bold
 hi tomlKeySq      guifg=#c0caf5 guibg=NONE    ctermfg=189 ctermbg=NONE gui=bold cterm=bold

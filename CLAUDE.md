@@ -81,7 +81,8 @@ TOML and YAML get explicit overrides so structural elements stand out:
 
 | Element                                                                           | Style         |
 |-----------------------------------------------------------------------------------|---------------|
-| Keys & tables (`tomlKey*`, `tomlTable*`, `yamlBlockMappingKey`, `yamlFlowMappingKey`) | white + bold  |
+| Keys (`tomlKey*`, `yamlBlockMappingKey`, `yamlFlowMappingKey`)                    | white + bold  |
+| Tables / section headers (`tomlTable`, `tomlTableArray`)                          | blue + bold   |
 | Strings (`tomlString`, `yamlFlowString`)                                          | green         |
 | Numbers & booleans (`tomlInteger`, `tomlFloat`, `tomlBoolean`, `yamlInteger`, `yamlFloat`, `yamlBool`) | orange |
 | Dates, null, doc markers, escapes (`tomlDate`, `tomlEscape`, `yamlNull`, `yamlDocumentStart/End`, `yamlSingleEscape`) | magenta |
