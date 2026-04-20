@@ -61,3 +61,20 @@ augroup ivim_autocomplete
   autocmd!
   autocmd FileType * call s:SetupBuffer()
 augroup END
+
+" Popup navigation keymaps — all <expr> so they fall through when popup
+" is not visible (Tab still indents, CR still inserts newline, etc.)
+inoremap <expr> <Tab>   pumvisible() ? "\<C-n>" : "\<Tab>"
+inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
+
+if has('patch-8.0.1775')
+  " complete_info() lets us keep <CR> as newline when no item is selected
+  inoremap <expr> <CR>
+        \ pumvisible() && complete_info(['selected']).selected != -1
+        \ ? "\<C-y>"
+        \ : "\<CR>"
+else
+  inoremap <expr> <CR> pumvisible() ? "\<C-y>" : "\<CR>"
+endif
+
+inoremap <expr> <Esc> pumvisible() ? "\<C-e>\<Esc>" : "\<Esc>"
