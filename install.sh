@@ -15,10 +15,11 @@ VIMRC="$HOME/.vimrc"
 UNDO_DIR="$HOME/.local/share/vim/undodir"
 
 usage() {
-  echo "Usage: $0 [--uninstall]"
+  echo "Usage: $0 [--uninstall | --help | -h]"
   echo ""
   echo "  (no args)    Install iVim (backup existing config, create symlinks)"
   echo "  --uninstall  Remove symlinks, restore most recent backup if available"
+  echo "  --help, -h   Show this help message"
 }
 
 backup_if_exists() {
@@ -35,14 +36,16 @@ find_latest_backup() {
   # Find the most recent .bak.* file by timestamp suffix
   local latest=""
   local latest_ts=0
+  # nullglob: an unmatched glob yields zero iterations instead of a literal string
+  shopt -s nullglob
   for f in "${target}.bak."*; do
-    [ -e "$f" ] || continue
     local ts="${f##*.bak.}"
     if [ "$ts" -gt "$latest_ts" ] 2>/dev/null; then
       latest_ts="$ts"
       latest="$f"
     fi
   done
+  shopt -u nullglob
   echo "$latest"
 }
 

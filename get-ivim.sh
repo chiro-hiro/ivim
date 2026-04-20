@@ -25,10 +25,10 @@ YELLOW='\033[33m'
 RED='\033[31m'
 RESET='\033[0m'
 
-info()  { printf "${BLUE}${BOLD}info:${RESET} %s\n" "$1"; }
-ok()    { printf "${GREEN}${BOLD}  ok:${RESET} %s\n" "$1"; }
-warn()  { printf "${YELLOW}${BOLD}warn:${RESET} %s\n" "$1"; }
-err()   { printf "${RED}${BOLD}error:${RESET} %s\n" "$1" >&2; }
+info()  { printf '%s%sinfo:%s %s\n' "$BLUE" "$BOLD" "$RESET" "$1"; }
+ok()    { printf '%s%s  ok:%s %s\n' "$GREEN" "$BOLD" "$RESET" "$1"; }
+warn()  { printf '%s%swarn:%s %s\n' "$YELLOW" "$BOLD" "$RESET" "$1"; }
+err()   { printf '%s%serror:%s %s\n' "$RED" "$BOLD" "$RESET" "$1" >&2; }
 
 backup_if_exists() {
   local target="$1"
@@ -43,14 +43,15 @@ find_latest_backup() {
   local target="$1"
   local latest=""
   local latest_ts=0
+  shopt -s nullglob
   for f in "${target}.bak."*; do
-    [ -e "$f" ] || continue
     local ts="${f##*.bak.}"
     if [ "$ts" -gt "$latest_ts" ] 2>/dev/null; then
       latest_ts="$ts"
       latest="$f"
     fi
   done
+  shopt -u nullglob
   echo "$latest"
 }
 
@@ -98,7 +99,7 @@ install() {
   else
     info "Cloning iVim..."
     if ! git clone --quiet "$REPO" "$IVIM_DIR"; then
-      rm -rf "$IVIM_DIR" 2>/dev/null
+      rm -rf "$IVIM_DIR" 2>/dev/null || true
       err "Clone failed, cleaned up partial download"
       exit 1
     fi
@@ -164,6 +165,20 @@ uninstall() {
   fi
 
   if [ -d "$IVIM_DIR" ] && [ ! -L "$IVIM_DIR" ]; then
+    # Guard against losing uncommitted/unpushed local work
+    local dirty=""
+    if [ -d "$IVIM_DIR/.git" ]; then
+      if [ -n "$(git -C "$IVIM_DIR" status --porcelain 2>/dev/null)" ]; then
+        dirty="uncommitted changes"
+      elif [ -n "$(git -C "$IVIM_DIR" log '@{u}..HEAD' --oneline 2>/dev/null)" ]; then
+        dirty="unpushed commits"
+      fi
+    fi
+    if [ -n "$dirty" ]; then
+      err "$IVIM_DIR has $dirty — not removing."
+      err "Commit or push your work, or delete $IVIM_DIR manually."
+      exit 1
+    fi
     rm -rf "$IVIM_DIR"
     ok "Removed $IVIM_DIR"
   elif [ -L "$IVIM_DIR" ]; then
