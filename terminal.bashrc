@@ -1,4 +1,11 @@
 # iVim terminal — Tokyo Night prompt
+
+# Prevent infinite recursion if ~/.bashrc ends up sourcing us back
+if [ -n "${_IVIM_TERMINAL_SOURCED:-}" ]; then
+  return 0 2>/dev/null || exit 0
+fi
+export _IVIM_TERMINAL_SOURCED=1
+
 # Source system and user profile for full environment
 [ -f /etc/profile ] && source /etc/profile
 [ -f ~/.bashrc ] && source ~/.bashrc
