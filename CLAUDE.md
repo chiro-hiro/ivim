@@ -159,7 +159,7 @@ The engine caches `b:ivim_trigger_pattern` (precompiled regex class) and `b:ivim
 ## Start Screen
 
 - `plugin/startscreen.vim` triggers on `VimEnter` only when `argc() == 0` and the buffer is empty
-- Renders a centered ASCII iVim logo + keymap hints; own highlight groups: `IvimLogo`, `IvimSubtitle`, `IvimHeader`, `IvimKey`, `IvimPrompt`
+- Renders a centered ASCII iVim logo + keymap hints organized in section blocks (FILE, BUFFERS, CLIPBOARD, TERMINAL, AUTOCOMPLETE, SPLITS, SEARCH, QUICKFIX, TABS, OTHER); own highlight groups: `IvimLogo`, `IvimSubtitle`, `IvimHeader`, `IvimKey`, `IvimPrompt`
 - Any alphanumeric / Enter / Esc / arrow / Space / `:` / `/` / `?` dismisses the screen via `:enew`; command keys (`:`, `/`, `?`) are re-fed so the user does not press twice
 
 ## Install

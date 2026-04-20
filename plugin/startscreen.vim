@@ -46,8 +46,12 @@ function! s:ShowStartScreen() abort
   call add(l:lines, '   TERMINAL                      TABS')
   call add(l:lines, '   Space t     Open terminal      Space Tn    New tab')
   call add(l:lines, '                                  Space Tc    Close tab')
-  call add(l:lines, '   OTHER')
-  call add(l:lines, '   Space a     Select all')
+  call add(l:lines, '')
+  call add(l:lines, '   AUTOCOMPLETE (popup)          OTHER')
+  call add(l:lines, '   Tab         Next item          Space a     Select all')
+  call add(l:lines, '   Shift-Tab   Previous item')
+  call add(l:lines, '   Enter       Accept selection')
+  call add(l:lines, '   Esc         Cancel popup')
   call add(l:lines, '')
   call add(l:lines, '')
   call add(l:lines, '   Press any key to start...')
@@ -69,8 +73,8 @@ function! s:ShowStartScreen() abort
   syntax match IvimLogo /| |  \\_\/  | | | | | | |/
   syntax match IvimLogo /|_|       |_|_| |_| |_|/
   syntax match IvimSubtitle /Plugin-free Vim with Tokyo Night/
-  syntax match IvimHeader /\(FILE\|BUFFERS\|CLIPBOARD\|TERMINAL\|OTHER\|SPLITS\|SEARCH\|QUICKFIX\|TABS\)/
-  syntax match IvimKey /Space [a-zA-Z=\/]\+\|Ctrl hjkl\|\]q\|\[q/
+  syntax match IvimHeader /\(FILE\|BUFFERS\|CLIPBOARD\|TERMINAL\|AUTOCOMPLETE\|OTHER\|SPLITS\|SEARCH\|QUICKFIX\|TABS\)/
+  syntax match IvimKey /Space [a-zA-Z=\/]\+\|Ctrl hjkl\|\]q\|\[q\|Shift-Tab\|\<Tab\>\|\<Enter\>\|\<Esc\>/
   syntax match IvimPrompt /Press any key to start\.\.\./
 
   highlight link IvimLogo Function
