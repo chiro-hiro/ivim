@@ -132,6 +132,23 @@ nnoremap <leader>= <C-w>=
 " === Search ===
 nnoremap <leader>/ :nohlsearch<CR>
 
+" Auto-clear hlsearch after a :s substitute. The substitute updates @/, so any
+" leftover matches inside the replacement (e.g. :s/foo/foobar/g) keep glowing.
+augroup ivim_substitute_nohl
+  autocmd!
+  autocmd CmdlineLeave : call s:ClearHlAfterSubstitute()
+augroup END
+
+function! s:ClearHlAfterSubstitute() abort
+  if get(v:event, 'abort', 0)
+    return
+  endif
+  " Match :[range]s[ubstitute] / :[range]sm[agic] / :[range]sno[magic]
+  if getcmdline() =~# '\v^\s*[%.$0-9,;+''\-<>]*\s*%(s%[ubstitute]|sm%[agic]|sno%[magic])>'
+    call timer_start(0, {-> execute('nohlsearch')})
+  endif
+endfunction
+
 " Search in files — prompts for pattern, uses vimgrep + quickfix
 function! s:SearchInFiles() abort
   let l:pattern = input('Search: ')
