@@ -40,7 +40,6 @@ function! s:ToggleExplorer() abort
     endif
   endfor
   Lexplore
-  vertical resize 30
 endfunction
 nnoremap <leader>e :call <SID>ToggleExplorer()<CR>
 
