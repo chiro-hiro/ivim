@@ -19,7 +19,7 @@ set laststatus=2
 set showcmd
 set showmode
 set ruler
-let &fillchars ..= ',eob: ,vert:│'
+let &fillchars .= ',eob: ,vert:│'
 
 " --- Netrw (file explorer) ---
 let g:netrw_liststyle = 3
