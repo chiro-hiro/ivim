@@ -11,6 +11,12 @@ function! s:UpdateGitBranch() abort
     let b:git_branch = ''
     return
   endif
+  " Unnamed buffers: expand('%:p:h') falls back to CWD, so without this
+  " guard a [No Name] buffer would advertise the CWD's branch as its own.
+  if empty(expand('%'))
+    let b:git_branch = ''
+    return
+  endif
   let l:dir = expand('%:p:h')
   if empty(l:dir)
     let b:git_branch = ''
@@ -25,6 +31,14 @@ function! s:UpdateGitBranch() abort
     let l:branch = ''
   else
     let l:branch = substitute(l:branch, '\n', '', 'g')
+    " Detached HEAD: rev-parse returns the literal string "HEAD". Resolve
+    " the short SHA so the statusline doesn't claim "HEAD" is a branch.
+    if l:branch ==# 'HEAD'
+      let l:sha = system('git -C ' . shellescape(l:dir) . ' rev-parse --short HEAD 2>/dev/null')
+      if !v:shell_error
+        let l:branch = 'detached:' . substitute(l:sha, '\n', '', 'g')
+      endif
+    endif
   endif
   let s:branch_cache[l:dir] = l:branch
   let b:git_branch = l:branch
