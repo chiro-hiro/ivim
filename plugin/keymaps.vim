@@ -91,14 +91,15 @@ function! IvimNetrwOpenInEditor() abort
 
   let l:fullpath = simplify(b:netrw_curdir . '/' . l:relpath)
 
-  " Let netrw handle directories (expand/collapse)
-  if isdirectory(l:fullpath)
-    execute "normal \<Plug>NetrwLocalBrowseCheck"
-    return
-  endif
-
-  if !filereadable(l:fullpath)
-    execute "normal \<Plug>NetrwLocalBrowseCheck"
+  " Let netrw handle directories (expand/collapse) and anything we can't
+  " read as a regular file. Guard against netrw being disabled
+  " (g:loaded_netrw=1) — the <Plug> map won't exist and `normal` would
+  " raise E116.
+  let l:has_plug = !empty(maparg("\<Plug>NetrwLocalBrowseCheck", 'n'))
+  if isdirectory(l:fullpath) || !filereadable(l:fullpath)
+    if l:has_plug
+      execute "normal \<Plug>NetrwLocalBrowseCheck"
+    endif
     return
   endif
 
