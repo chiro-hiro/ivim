@@ -15,9 +15,12 @@ function! s:CloseTerminals() abort
   endfor
 endfunction
 
+" VimLeavePre — only fires when Vim is actually exiting. QuitPre fired on
+" every :q, so an aborted quit (e.g. unsaved changes in another window)
+" would silently kill all running terminal jobs while Vim stayed open.
 augroup ivim_terminal_cleanup
   autocmd!
-  autocmd QuitPre * call s:CloseTerminals()
+  autocmd VimLeavePre * call s:CloseTerminals()
 augroup END
 
 " Exit insert mode when entering a non-modifiable buffer (e.g. via mouse
