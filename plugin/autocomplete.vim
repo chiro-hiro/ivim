@@ -16,6 +16,14 @@ let s:prose_filetypes = {'markdown': 1, 'gitcommit': 1, 'text': 1, 'help': 1}
 "   - Installs a <buffer>-local TextChangedI autocmd so disabled
 "     buffers pay zero per-keystroke cost
 function! s:SetupBuffer() abort
+  " Always clear any prior <buffer> autocmd first — without this, switching
+  " a buffer's filetype from e.g. `c` to `markdown` would leave the old
+  " TextChangedI handler in place because the prose / disable early-returns
+  " below would skip past the autocmd! line.
+  augroup ivim_autocomplete_buf
+    autocmd! * <buffer>
+  augroup END
+
   if get(b:, 'ivim_autocomplete_disable', 0)
     return
   endif
@@ -31,7 +39,6 @@ function! s:SetupBuffer() abort
   let b:ivim_has_omnifunc = !empty(&omnifunc)
 
   augroup ivim_autocomplete_buf
-    autocmd! * <buffer>
     autocmd TextChangedI <buffer> call <SID>MaybeTrigger()
   augroup END
 endfunction
