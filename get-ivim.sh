@@ -224,6 +224,17 @@ uninstall() {
     warn "$IVIM_DIR is a symlink, not removing for safety"
   fi
 
+  # State directories created/used by iVim that may still hold user data
+  # (undo history, netrw history). We deliberately do NOT auto-remove
+  # them — destroying undo history without consent is too aggressive —
+  # but we point them out so the user can clean up if they want.
+  local data_dir="$HOME/.local/share/vim"
+  if [ -d "$data_dir" ]; then
+    printf "\n"
+    warn "iVim state in $data_dir was left intact (undo history, netrw bookmarks)."
+    warn "Remove manually with: rm -rf \"$data_dir\""
+  fi
+
   printf "\n"
   printf "${GREEN}${BOLD}iVim uninstalled.${RESET}\n"
   printf "\n"
