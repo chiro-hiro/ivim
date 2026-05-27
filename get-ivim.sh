@@ -38,6 +38,13 @@ backup_if_exists() {
   local target="$1"
   if [ -e "$target" ] || [ -L "$target" ]; then
     local backup="${target}.bak.${TIMESTAMP}"
+    # Two installs within the same second would otherwise reuse the same
+    # backup name and silently clobber the earlier backup.
+    local n=1
+    while [ -e "$backup" ] || [ -L "$backup" ]; do
+      backup="${target}.bak.${TIMESTAMP}.${n}"
+      n=$((n + 1))
+    done
     warn "Backing up $target → $backup"
     mv "$target" "$backup"
     BACKUPS_MADE+=("$target" "$backup")
