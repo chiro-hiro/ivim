@@ -91,6 +91,17 @@ find_latest_backup() {
 }
 
 install() {
+  # If both symlinks already point here, the user has just pulled new
+  # commits into the existing clone and re-run install.sh. There is
+  # nothing to do beyond confirming so — no new backups, no relink.
+  if [ -L "$VIM_DIR" ] && [ "$(readlink "$VIM_DIR")" = "$SCRIPT_DIR" ] \
+     && [ -L "$VIMRC" ] && [ "$(readlink "$VIMRC")" = "$SCRIPT_DIR/vimrc" ]; then
+    echo "iVim already installed — symlinks point at $SCRIPT_DIR."
+    echo "Pull the latest commits in this directory to update."
+    INSTALL_OK=1
+    return
+  fi
+
   echo "Installing iVim..."
   echo ""
 
@@ -105,10 +116,13 @@ install() {
   ln -s "$SCRIPT_DIR/vimrc" "$VIMRC"
   echo "  Linked: $VIMRC → $SCRIPT_DIR/vimrc"
 
-  # Create undo directory (700 to prevent other users reading undo history)
-  mkdir -p "$UNDO_DIR"
-  chmod 700 "$UNDO_DIR"
-  echo "  Created: $UNDO_DIR"
+  # Create undo directory (700 to prevent other users reading undo history).
+  # Idempotent: only announce when we actually had to create it.
+  if [ ! -d "$UNDO_DIR" ]; then
+    mkdir -p "$UNDO_DIR"
+    chmod 700 "$UNDO_DIR"
+    echo "  Created: $UNDO_DIR"
+  fi
 
   INSTALL_OK=1
   echo ""
