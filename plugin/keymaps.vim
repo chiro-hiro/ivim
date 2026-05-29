@@ -15,9 +15,12 @@ function! s:CloseTerminals() abort
   endfor
 endfunction
 
+" VimLeavePre — only fires when Vim is actually exiting. QuitPre fired on
+" every :q, so an aborted quit (e.g. unsaved changes in another window)
+" would silently kill all running terminal jobs while Vim stayed open.
 augroup ivim_terminal_cleanup
   autocmd!
-  autocmd QuitPre * call s:CloseTerminals()
+  autocmd VimLeavePre * call s:CloseTerminals()
 augroup END
 
 " Exit insert mode when entering a non-modifiable buffer (e.g. via mouse
@@ -40,7 +43,6 @@ function! s:ToggleExplorer() abort
     endif
   endfor
   Lexplore
-  vertical resize 30
 endfunction
 nnoremap <leader>e :call <SID>ToggleExplorer()<CR>
 
@@ -89,14 +91,15 @@ function! IvimNetrwOpenInEditor() abort
 
   let l:fullpath = simplify(b:netrw_curdir . '/' . l:relpath)
 
-  " Let netrw handle directories (expand/collapse)
-  if isdirectory(l:fullpath)
-    execute "normal \<Plug>NetrwLocalBrowseCheck"
-    return
-  endif
-
-  if !filereadable(l:fullpath)
-    execute "normal \<Plug>NetrwLocalBrowseCheck"
+  " Let netrw handle directories (expand/collapse) and anything we can't
+  " read as a regular file. Guard against netrw being disabled
+  " (g:loaded_netrw=1) — the <Plug> map won't exist and `normal` would
+  " raise E116.
+  let l:has_plug = !empty(maparg("\<Plug>NetrwLocalBrowseCheck", 'n'))
+  if isdirectory(l:fullpath) || !filereadable(l:fullpath)
+    if l:has_plug
+      execute "normal \<Plug>NetrwLocalBrowseCheck"
+    endif
     return
   endif
 

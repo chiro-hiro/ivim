@@ -38,6 +38,13 @@ backup_if_exists() {
   local target="$1"
   if [ -e "$target" ] || [ -L "$target" ]; then
     local backup="${target}.bak.${TIMESTAMP}"
+    # Two installs within the same second would otherwise reuse the same
+    # backup name and silently clobber the earlier backup.
+    local n=1
+    while [ -e "$backup" ] || [ -L "$backup" ]; do
+      backup="${target}.bak.${TIMESTAMP}.${n}"
+      n=$((n + 1))
+    done
     warn "Backing up $target → $backup"
     mv "$target" "$backup"
     BACKUPS_MADE+=("$target" "$backup")
@@ -114,8 +121,11 @@ install() {
   check_deps
   ok "git and vim found"
 
+  local is_update=0
+
   # Clone or update
   if [ -d "$IVIM_DIR" ]; then
+    is_update=1
     info "Updating existing installation..."
     local remote
     remote="$(git -C "$IVIM_DIR" remote get-url origin 2>/dev/null || echo "")"
@@ -137,26 +147,41 @@ install() {
     ok "Cloned to $IVIM_DIR"
   fi
 
-  # Backup existing config
-  info "Setting up Vim config..."
-  backup_if_exists "$VIM_DIR"
-  backup_if_exists "$VIMRC"
+  # Symlinks: if both already point at $IVIM_DIR this is a re-run for an
+  # update and there is nothing to back up or relink — the `git pull`
+  # above already picked up the new version. Otherwise (fresh install,
+  # half-installed state, user removed one of the symlinks) fall through
+  # to the backup + ln dance.
+  if [ -L "$VIM_DIR" ] && [ "$(readlink "$VIM_DIR")" = "$IVIM_DIR" ] \
+     && [ -L "$VIMRC" ] && [ "$(readlink "$VIMRC")" = "$IVIM_DIR/vimrc" ]; then
+    ok "Symlinks already in place"
+  else
+    info "Setting up Vim config..."
+    backup_if_exists "$VIM_DIR"
+    backup_if_exists "$VIMRC"
 
-  # Symlink
-  ln -s "$IVIM_DIR" "$VIM_DIR"
-  ok "Linked $VIM_DIR → $IVIM_DIR"
+    ln -s "$IVIM_DIR" "$VIM_DIR"
+    ok "Linked $VIM_DIR → $IVIM_DIR"
 
-  ln -s "$IVIM_DIR/vimrc" "$VIMRC"
-  ok "Linked $VIMRC → $IVIM_DIR/vimrc"
+    ln -s "$IVIM_DIR/vimrc" "$VIMRC"
+    ok "Linked $VIMRC → $IVIM_DIR/vimrc"
+  fi
 
-  # Undo directory (700 to prevent other users reading undo history)
-  mkdir -p "$UNDO_DIR"
-  chmod 700 "$UNDO_DIR"
-  ok "Created $UNDO_DIR"
+  # Undo directory (700 to prevent other users reading undo history).
+  # Idempotent: only announce when we actually had to create it.
+  if [ ! -d "$UNDO_DIR" ]; then
+    mkdir -p "$UNDO_DIR"
+    chmod 700 "$UNDO_DIR"
+    ok "Created $UNDO_DIR"
+  fi
 
   INSTALL_OK=1
   printf "\n"
-  printf "${GREEN}${BOLD}iVim installed successfully!${RESET}\n"
+  if [ "$is_update" = 1 ]; then
+    printf "${GREEN}${BOLD}iVim updated successfully!${RESET}\n"
+  else
+    printf "${GREEN}${BOLD}iVim installed successfully!${RESET}\n"
+  fi
   printf "\n"
   printf "  Run ${BOLD}vim${RESET} to get started.\n"
   printf "  Uninstall: ${BOLD}curl -fsSL <install-url> | bash -s -- --uninstall${RESET}\n"
@@ -215,6 +240,17 @@ uninstall() {
     ok "Removed $IVIM_DIR"
   elif [ -L "$IVIM_DIR" ]; then
     warn "$IVIM_DIR is a symlink, not removing for safety"
+  fi
+
+  # State directories created/used by iVim that may still hold user data
+  # (undo history, netrw history). We deliberately do NOT auto-remove
+  # them — destroying undo history without consent is too aggressive —
+  # but we point them out so the user can clean up if they want.
+  local data_dir="$HOME/.local/share/vim"
+  if [ -d "$data_dir" ]; then
+    printf "\n"
+    warn "iVim state in $data_dir was left intact (undo history, netrw bookmarks)."
+    warn "Remove manually with: rm -rf \"$data_dir\""
   fi
 
   printf "\n"

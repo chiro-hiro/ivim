@@ -29,6 +29,13 @@ backup_if_exists() {
   local target="$1"
   if [ -e "$target" ] || [ -L "$target" ]; then
     local backup="${target}.bak.${TIMESTAMP}"
+    # Two installs within the same second would otherwise reuse the same
+    # backup name and silently clobber the earlier backup.
+    local n=1
+    while [ -e "$backup" ] || [ -L "$backup" ]; do
+      backup="${target}.bak.${TIMESTAMP}.${n}"
+      n=$((n + 1))
+    done
     echo "  Backing up: $target → $backup"
     mv "$target" "$backup"
     BACKUPS_MADE+=("$target" "$backup")
@@ -84,6 +91,17 @@ find_latest_backup() {
 }
 
 install() {
+  # If both symlinks already point here, the user has just pulled new
+  # commits into the existing clone and re-run install.sh. There is
+  # nothing to do beyond confirming so — no new backups, no relink.
+  if [ -L "$VIM_DIR" ] && [ "$(readlink "$VIM_DIR")" = "$SCRIPT_DIR" ] \
+     && [ -L "$VIMRC" ] && [ "$(readlink "$VIMRC")" = "$SCRIPT_DIR/vimrc" ]; then
+    echo "iVim already installed — symlinks point at $SCRIPT_DIR."
+    echo "Pull the latest commits in this directory to update."
+    INSTALL_OK=1
+    return
+  fi
+
   echo "Installing iVim..."
   echo ""
 
@@ -98,10 +116,13 @@ install() {
   ln -s "$SCRIPT_DIR/vimrc" "$VIMRC"
   echo "  Linked: $VIMRC → $SCRIPT_DIR/vimrc"
 
-  # Create undo directory (700 to prevent other users reading undo history)
-  mkdir -p "$UNDO_DIR"
-  chmod 700 "$UNDO_DIR"
-  echo "  Created: $UNDO_DIR"
+  # Create undo directory (700 to prevent other users reading undo history).
+  # Idempotent: only announce when we actually had to create it.
+  if [ ! -d "$UNDO_DIR" ]; then
+    mkdir -p "$UNDO_DIR"
+    chmod 700 "$UNDO_DIR"
+    echo "  Created: $UNDO_DIR"
+  fi
 
   INSTALL_OK=1
   echo ""
@@ -143,6 +164,18 @@ uninstall() {
     echo "  Skipped: $VIMRC symlink does not point to iVim"
   else
     echo "  Skipped: $VIMRC is not a symlink"
+  fi
+
+  # State directories created/used by iVim that may still hold user data
+  # (undo history, netrw history). We deliberately do NOT auto-remove
+  # them — destroying undo history without consent is too aggressive —
+  # but we point them out so the user can clean up if they want.
+  local data_dir="$HOME/.local/share/vim"
+  if [ -d "$data_dir" ]; then
+    echo ""
+    echo "  Note: iVim state in $data_dir was left intact (undo history,"
+    echo "        netrw bookmarks). Remove manually with:"
+    echo "          rm -rf \"$data_dir\""
   fi
 
   echo ""

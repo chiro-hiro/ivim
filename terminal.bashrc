@@ -12,8 +12,11 @@ _IVIM_TERMINAL_SOURCED=1
 
 # Resolve git's absolute path BEFORE sourcing /etc/profile or ~/.bashrc so
 # PATH manipulation in those files cannot substitute a malicious git binary
-# that would then be invoked on every prompt redraw.
-_IVIM_GIT="$(command -v git 2>/dev/null || echo git)"
+# that would then be invoked on every prompt redraw. If git is not on PATH
+# at source-time we deliberately leave _IVIM_GIT empty — falling back to
+# bare `git` would route every prompt through whatever profile scripts
+# subsequently added to PATH, defeating the hardening.
+_IVIM_GIT="$(command -v git 2>/dev/null || true)"
 
 # Source system and user profile for full environment
 [ -f /etc/profile ] && source /etc/profile
@@ -22,6 +25,7 @@ _IVIM_GIT="$(command -v git 2>/dev/null || echo git)"
 # Tokyo Night prompt
 # Green: user | Cyan: host | Blue: directory | Purple: git branch | Purple: prompt
 __tn_git_branch() {
+  [ -z "$_IVIM_GIT" ] && return
   local branch
   branch="$("$_IVIM_GIT" rev-parse --abbrev-ref HEAD 2>/dev/null)"
   [ -z "$branch" ] && return

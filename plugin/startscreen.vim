@@ -83,6 +83,16 @@ function! s:ShowStartScreen() abort
   highlight link IvimKey Keyword
   highlight link IvimPrompt Comment
 
+  " syntax match is global, not buffer-local. Without an explicit clear
+  " on dismiss the IvimLogo/IvimSubtitle/... patterns keep matching in
+  " whatever buffer the user opens next.
+  augroup ivim_startscreen_cleanup
+    autocmd!
+    autocmd BufWipeout <buffer>
+          \ silent! syntax clear IvimLogo IvimSubtitle IvimHeader
+          \                      IvimKey IvimPrompt
+  augroup END
+
   " Any keypress closes the start screen
   nnoremap <buffer><silent> <Space> :enew<CR>
   for key in ['a','b','c','d','e','f','g','h','i','j','k','l','m',
