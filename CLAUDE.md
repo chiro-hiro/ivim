@@ -105,7 +105,7 @@ Other filetypes rely on Vim's default syntax → generic-group links (`String`, 
 
 ## Autocomplete
 
-IDE-style auto-completion via `plugin/autocomplete.vim`. As you type in insert mode, a popup appears automatically: word characters (≥2 prefix) trigger keyword completion (`<C-n>`) from the current file and other open buffers; filetype-configured trigger characters (`.`, `::`, `->`, etc.) trigger `omnifunc` (`<C-x><C-o>`). Disabled in prose filetypes (markdown, gitcommit, text, help) — those buffers get no `TextChangedI` autocmd attached at all.
+IDE-style auto-completion via `plugin/autocomplete.vim`. As you type in insert mode, a popup appears automatically: word characters (≥2 prefix) trigger keyword completion (`<C-n>`) from the current file and other open buffers; filetype-configured trigger characters (single chars only — the union across ftplugins is `.`, `>`, `:`, `<`, `/`, `$`, and space) trigger `omnifunc` (`<C-x><C-o>`). Disabled in prose filetypes (markdown, gitcommit, text, help) — those buffers get no `TextChangedI` autocmd attached at all.
 
 ### Popup navigation
 
