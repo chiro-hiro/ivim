@@ -72,17 +72,25 @@ find_latest_backup() {
   # on the next uninstall-and-restore).
   local latest=""
   local latest_ts=0
+  local latest_ctr=0
   shopt -s nullglob
   for f in "${target}.bak."*; do
-    local ts="${f##*.bak.}"
-    if ! [[ "$ts" =~ ^[0-9]+$ ]]; then
+    # Suffix is <epoch> or, for same-second collisions, <epoch>.<counter>.
+    # Both components must be integers — anything else is a crafted name.
+    local suffix="${f##*.bak.}"
+    local ts="${suffix%%.*}"
+    local ctr="${suffix#*.}"
+    [ "$ctr" = "$suffix" ] && ctr=0
+    if ! [[ "$ts" =~ ^[0-9]+$ ]] || ! [[ "$ctr" =~ ^[0-9]+$ ]]; then
       continue
     fi
     if [ ! -O "$f" ]; then
       continue
     fi
-    if [ "$ts" -gt "$latest_ts" ]; then
+    if [ "$ts" -gt "$latest_ts" ] \
+       || { [ "$ts" -eq "$latest_ts" ] && [ "$ctr" -gt "$latest_ctr" ]; }; then
       latest_ts="$ts"
+      latest_ctr="$ctr"
       latest="$f"
     fi
   done
