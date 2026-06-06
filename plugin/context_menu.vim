@@ -28,12 +28,23 @@ inoremenu <silent> PopUp.Paste     <C-r>+
 " <Cmd> (patch-8.2.1978) runs an Ex command without changing mode —
 " ideal for preserving insert mode across the popup. Older Vim falls
 " back to :popup / <C-o>:popup with a brief mode switch.
+" In Visual mode Vim's default <RightMouse> press extends the selection to
+" the click point *before* <RightRelease> fires, so Copy/Cut would act on the
+" wrong range. Neutralize the press (and drag) so the menu operates on the
+" selection the user actually made. Normal/insert <RightMouse> has no
+" destructive default, so it is left alone.
+vnoremap <silent> <RightMouse> <Nop>
+vnoremap <silent> <RightDrag>  <Nop>
+
 if has('patch-8.2.1978')
   nnoremap <silent> <RightRelease> <Cmd>popup PopUp<CR>
   vnoremap <silent> <RightRelease> <Cmd>popup PopUp<CR>
   inoremap <silent> <RightRelease> <Cmd>popup PopUp<CR>
 else
+  " No insert-mode right-click on older Vim: the only way to reach the popup
+  " from insert mode is <C-o>, which switches to Normal mode so the popup
+  " resolves the Normal-mode Paste ("+p) instead of the insert-mode <C-r>+,
+  " pasting with the wrong semantics. Leave insert mode's default intact.
   nnoremap <silent> <RightRelease> :popup PopUp<CR>
   vnoremap <silent> <RightRelease> :popup PopUp<CR>
-  inoremap <silent> <RightRelease> <C-o>:popup PopUp<CR>
 endif

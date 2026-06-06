@@ -125,9 +125,9 @@ Any ftplugin can influence the engine by setting these before `FileType` fires:
 | Variable                      | Purpose                                              |
 |-------------------------------|------------------------------------------------------|
 | `b:ivim_autocomplete_disable` | Set to `1` to skip the engine entirely for the buffer |
-| `b:ivim_complete_triggers`    | List of characters that fire omnifunc dispatch (default `['.']`; empty list = keyword-only) |
+| `b:ivim_complete_triggers`    | List of trigger sequences that fire omnifunc dispatch; entries may be multi-char operators (`->`, `::`) which match in full so a bare `>`/`:` does not trigger (default `['.']`; empty list = keyword-only) |
 
-The engine caches `b:ivim_trigger_pattern` (precompiled regex class) and `b:ivim_has_omnifunc` (cached `!empty(&omnifunc)`) on `FileType` so the per-keystroke hot path does minimal work.
+The engine normalizes `b:ivim_complete_triggers` into `b:ivim_triggers` (longest-first list) on `FileType` so the hot path tests multi-char operators before single chars. `&omnifunc` presence is checked live per keystroke (not cached) so a buffer whose omnifunc is set/cleared after `FileType` still dispatches correctly.
 
 ### Omnifunc mapping
 
@@ -165,7 +165,7 @@ On Vim 8.2.1978+ the trigger uses `<Cmd>popup PopUp<CR>` so insert mode is prese
 - Opens below with fixed 15 rows and `term_finish='close'`
 - Entire `<leader>t` keymap block is guarded by `has('terminal')`; on minimal Vim builds the keymap prints a warning instead of erroring
 - Uses `term_start(['bash', '--init-file', l:rcfile], {…})` with a list argument — NOT `:execute 'below terminal …'` — so paths containing spaces do not misparse (Vim's `:terminal` splits its command on whitespace regardless of quoting)
-- `terminal.bashrc` sources `/etc/profile` and `~/.bashrc` first (full user env inherited), then sets a green-user / cyan-host / blue-cwd / purple-branch prompt using a nerd-font branch glyph; detached HEAD renders as `detached:<short-SHA>`
+- `terminal.bashrc` sources `/etc/profile` and `~/.bashrc` first (full user env inherited), then sets a green-user / cyan-host / blue-cwd / purple-branch prompt (branch segment is space-prefixed, no font dependency); detached HEAD renders as `detached:<short-SHA>`
 - `terminal.bashrc` guards against recursive sourcing via `_IVIM_TERMINAL_SOURCED` so any `~/.bashrc` loop is a no-op on re-entry
 - Auto-closes terminal buffers on quit (`QuitPre` autocommand)
 - `ivim_terminal_mouse` autogroup clears netrw mouse mappings that would otherwise leak into the terminal buffer
@@ -218,5 +218,5 @@ Notable per-type extras:
 - Script-local functions use `s:` prefix; global functions use topic prefixes: `Stl` (statusline), `Ivim` (everything else)
 - Cross-file buffer-local state uses `b:ivim_*` prefix (e.g. `b:ivim_complete_triggers`, `b:ivim_autocomplete_disable`)
 - `plugin/*.vim` files carry a one-line comment header; `after/ftplugin/*.vim` files have no header
-- User input passed to `execute` must escape `/`, `\`, and `|`
+- User input passed to `execute` must be escaped for its search context: a `/`-delimited very-nomagic (`\V`) pattern escapes only `/` and `\` (a literal `|` must NOT be escaped — `\|` is alternation in `\V`); other contexts escape whatever is special there
 - Install scripts use `set -euo pipefail`, quote all variables, verify symlink targets, refuse to run as root

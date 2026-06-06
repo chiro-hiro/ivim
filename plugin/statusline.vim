@@ -46,7 +46,17 @@ endfunction
 
 function! s:InvalidateBranchCache() abort
   let s:branch_cache = {}
-  call s:UpdateGitBranch()
+  " Refresh every window in the current tab, not just the active one, so a
+  " branch switch via :!git … updates all visible splits immediately instead
+  " of leaving inactive windows showing the old branch until their next
+  " BufEnter. noautocmd: recompute b:git_branch only, don't fire the full
+  " Win/BufEnter chain for each window we hop through.
+  let l:cur = win_getid()
+  for l:nr in range(1, winnr('$'))
+    noautocmd call win_gotoid(win_getid(l:nr))
+    call s:UpdateGitBranch()
+  endfor
+  noautocmd call win_gotoid(l:cur)
 endfunction
 
 augroup ivim_statusline

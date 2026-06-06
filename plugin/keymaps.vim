@@ -158,7 +158,10 @@ function! s:SearchInFiles() abort
   if empty(l:pattern)
     return
   endif
-  let l:escaped = escape(l:pattern, '/\|')
+  " Very-nomagic (\V) below: only the delimiter (/) and backslash are special.
+  " A literal | must NOT be escaped here — \| is the alternation operator in
+  " \V, so escaping it would turn 'a|b' into 'a OR b'.
+  let l:escaped = escape(l:pattern, '/\')
   try
     execute 'vimgrep /\V' . l:escaped . '/ **/*'
     copen
@@ -181,12 +184,16 @@ if has('clipboard')
   vnoremap <leader>y "+y
   nnoremap <leader>y "+y
   nnoremap <leader>p "+p
-  nnoremap <leader>P "+P
   vnoremap <leader>p "+p
+  nnoremap <leader>P "+P
+  vnoremap <leader>P "+P
 else
   nnoremap <leader>y :echo 'Clipboard not available: Vim compiled without +clipboard'<CR>
   vnoremap <leader>y :<C-u>echo 'Clipboard not available: Vim compiled without +clipboard'<CR>
   nnoremap <leader>p :echo 'Clipboard not available: Vim compiled without +clipboard'<CR>
+  vnoremap <leader>p :<C-u>echo 'Clipboard not available: Vim compiled without +clipboard'<CR>
+  nnoremap <leader>P :echo 'Clipboard not available: Vim compiled without +clipboard'<CR>
+  vnoremap <leader>P :<C-u>echo 'Clipboard not available: Vim compiled without +clipboard'<CR>
 endif
 
 " === Select all ===
