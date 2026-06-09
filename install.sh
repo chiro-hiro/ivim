@@ -27,6 +27,15 @@ BACKUPS_MADE=()
 
 backup_if_exists() {
   local target="$1"
+  local expected="${2:-}"
+  # A target that is already the canonical iVim symlink is not user data — do
+  # not back it up. Otherwise a partial re-install (user removed only one of
+  # the two symlinks) would move the still-good link into a .bak that a later
+  # uninstall could wrongly "restore", orphaning the real pre-iVim config.
+  if [ -n "$expected" ] && [ -L "$target" ] \
+     && [ "$(readlink "$target")" = "$expected" ]; then
+    return
+  fi
   if [ -e "$target" ] || [ -L "$target" ]; then
     local backup="${target}.bak.${TIMESTAMP}"
     # Two installs within the same second would otherwise reuse the same
@@ -81,6 +90,16 @@ find_latest_backup() {
     if [ ! -O "$f" ]; then
       continue
     fi
+    # Skip a "backup" that is itself a symlink into the iVim source — that is
+    # not the user's original config but a good iVim link a buggy older run
+    # may have moved aside; restoring it would re-point ~/.vim at the source.
+    if [ -L "$f" ]; then
+      local resolved
+      resolved="$(readlink -f "$f" 2>/dev/null || true)"
+      if [ "$resolved" = "$SCRIPT_DIR" ] || [ "$resolved" = "$SCRIPT_DIR/vimrc" ]; then
+        continue
+      fi
+    fi
     if [ "$ts" -gt "$latest_ts" ]; then
       latest_ts="$ts"
       latest="$f"
@@ -106,8 +125,8 @@ install() {
   echo ""
 
   # Backup existing config
-  backup_if_exists "$VIM_DIR"
-  backup_if_exists "$VIMRC"
+  backup_if_exists "$VIM_DIR" "$SCRIPT_DIR"
+  backup_if_exists "$VIMRC" "$SCRIPT_DIR/vimrc"
 
   # Create symlinks
   ln -s "$SCRIPT_DIR" "$VIM_DIR"

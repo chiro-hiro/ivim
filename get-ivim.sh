@@ -36,6 +36,15 @@ BACKUPS_MADE=()
 
 backup_if_exists() {
   local target="$1"
+  local expected="${2:-}"
+  # A target that is already the canonical iVim symlink is not user data — do
+  # not back it up. Otherwise a partial re-install (user removed only one of
+  # the two symlinks) would move the still-good link into a .bak that a later
+  # uninstall could wrongly "restore", orphaning the real pre-iVim config.
+  if [ -n "$expected" ] && [ -L "$target" ] \
+     && [ "$(readlink "$target")" = "$expected" ]; then
+    return
+  fi
   if [ -e "$target" ] || [ -L "$target" ]; then
     local backup="${target}.bak.${TIMESTAMP}"
     # Two installs within the same second would otherwise reuse the same
@@ -84,6 +93,16 @@ find_latest_backup() {
     if [ ! -O "$f" ]; then
       continue
     fi
+    # Skip a "backup" that is itself a symlink into the iVim source — that is
+    # not the user's original config but a good iVim link a buggy older run
+    # may have moved aside; restoring it would re-point ~/.vim at the source.
+    if [ -L "$f" ]; then
+      local resolved
+      resolved="$(readlink -f "$f" 2>/dev/null || true)"
+      if [ "$resolved" = "$IVIM_DIR" ] || [ "$resolved" = "$IVIM_DIR/vimrc" ]; then
+        continue
+      fi
+    fi
     if [ "$ts" -gt "$latest_ts" ]; then
       latest_ts="$ts"
       latest="$f"
@@ -127,6 +146,13 @@ install() {
   if [ -d "$IVIM_DIR" ]; then
     is_update=1
     info "Updating existing installation..."
+    # Distinguish "not a git repo" from "wrong remote" — both otherwise yield
+    # an empty remote URL and a misleading mismatch message.
+    if ! git -C "$IVIM_DIR" rev-parse --git-dir &>/dev/null; then
+      err "$IVIM_DIR exists but is not a git repository."
+      err "Remove it and re-run, or move it aside first."
+      exit 1
+    fi
     local remote
     remote="$(git -C "$IVIM_DIR" remote get-url origin 2>/dev/null || echo "")"
     if [ "$remote" != "$REPO" ]; then
@@ -135,7 +161,11 @@ install() {
       err "Got:      $remote"
       exit 1
     fi
-    git -C "$IVIM_DIR" pull --ff-only --quiet
+    if ! git -C "$IVIM_DIR" pull --ff-only --quiet; then
+      err "Could not fast-forward $IVIM_DIR (local changes diverge from origin)."
+      err "Resolve manually: git -C $IVIM_DIR status   (stash/reset, then re-run)."
+      exit 1
+    fi
     ok "Updated $IVIM_DIR"
   else
     info "Cloning iVim..."
@@ -157,8 +187,8 @@ install() {
     ok "Symlinks already in place"
   else
     info "Setting up Vim config..."
-    backup_if_exists "$VIM_DIR"
-    backup_if_exists "$VIMRC"
+    backup_if_exists "$VIM_DIR" "$IVIM_DIR"
+    backup_if_exists "$VIMRC" "$IVIM_DIR/vimrc"
 
     ln -s "$IVIM_DIR" "$VIM_DIR"
     ok "Linked $VIM_DIR → $IVIM_DIR"
