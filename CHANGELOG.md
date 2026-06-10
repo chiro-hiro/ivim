@@ -24,6 +24,7 @@ This project adheres to [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 - **Terminal `<leader>t` keymap** wrapped in `has('terminal')`; minimal Vim builds (`vim-tiny`) now show a warning instead of erroring.
 - **Keyword `<C-n>`** now fires only at the **second word character of a new word**, not on every subsequent word char. Previously the popup closed-and-re-opened on every keystroke, blocking users who wanted to type past the suggestions.
 - **`README.md`** install section advises readers to inspect `get-ivim.sh` before piping to bash.
+- **`noshowmode`** — the custom statusline already shows the mode, so Vim's native `-- INSERT --` / `-- VISUAL --` indicator in the command line was redundant. Suppressed (`set showmode` → `set noshowmode`).
 
 ### Fixed
 

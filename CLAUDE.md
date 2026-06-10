@@ -102,6 +102,7 @@ Other filetypes rely on Vim's default syntax → generic-group links (`String`, 
 - Dynamic mode highlight colors on Vim 8.2.2854+, static fallback on older versions
 - Custom tabline showing filename only (no buffer numbers)
 - `Stl*` highlight groups include `StlModeNormal`, `StlModeInsert`, `StlModeVisual`, `StlModeReplace`, `StlModeCommand`
+- The statusline shows the mode, so `settings.vim` sets `noshowmode` to suppress Vim's redundant `-- INSERT --` / `-- VISUAL --` in the command line
 
 ## Autocomplete
 
@@ -158,6 +159,8 @@ On Vim 8.2.1978+ the trigger uses `<Cmd>popup PopUp<CR>` so insert mode is prese
 - Smooth tree lines via syntax conceal (`|` → `│`) set in `after/ftplugin/netrw.vim`
 - Smooth vertical split separator via global `fillchars` (not netrw-specific)
 - `<CR>` / double-click call `IvimNetrwOpenInEditor()` — opens files in the previous window so the netrw drawer stays put
+- For a directory, `IvimNetrwOpenInEditor()` hands off to netrw via `normal <Plug>NetrwLocalBrowseCheck`, gated on `exists('*netrw#LocalBrowseCheck')` — NOT `maparg()`, which cannot find a buffer-local `<Plug>` map by name (a `maparg` guard is always false → folders never expand)
+- `after/ftplugin/netrw.vim` deliberately sets **no** `b:undo_ftplugin`: netrw re-fires `FileType` on its own buffer during routine use (list-style `i`, directory change), and any undo line makes Vim reload netrw's own ftplugin mid-operation → `E749: Empty buffer`
 - Helper globals: `IvimNetrwGetTreePath()`, `IvimNetrwOpenInEditor()` (defined in `plugin/keymaps.vim`)
 
 ## Terminal
@@ -195,7 +198,7 @@ Both installers back up existing `~/.vim` and `~/.vimrc` with timestamps, verify
 
 ## Ftplugin Overrides
 
-All ftplugins use `setlocal` only. Two indent tiers:
+All ftplugins use `setlocal` only; every **language** ftplugin also sets `b:undo_ftplugin` to revert its `setlocal` options and `unlet! b:ivim_*` on filetype change (netrw is the deliberate exception — see Netrw File Explorer). Two indent tiers:
 
 | Indent  | Filetypes                                                          |
 |---------|--------------------------------------------------------------------|
@@ -209,9 +212,20 @@ Notable per-type extras:
 - `markdown` — `wrap` + `linebreak` (visual soft-wrap; the only ftplugin to change display behavior)
 - `netrw` — `conceallevel=2`, `|`→`│` conceal, custom statusline, `<CR>` → `IvimNetrwOpenInEditor()`
 
+## Testing
+
+No test framework — verify by sourcing/driving Vim headlessly:
+
+- Source-check one file: `vim -Nu NONE -i NONE -es -c 'source <file>' -c 'qa!'` (empty output = clean)
+- Smoke-test the full config: set `rtp` to `<repo>,$VIMRUNTIME,<repo>/after` then `source <repo>/vimrc`. Vim does **not** auto-derive the `after/` dir from an rtp entry — list it explicitly. The installed `~/.vim → ~/.ivim` is on the default rtp and shadows the working tree, so always set `rtp` explicitly.
+- Interactive netrw (`<CR>` on a folder, `i` list-style) can't be tested in `-es` mode — it throws spurious `E749`/`E31`. Drive a real `vim` through a Python `pty` (`pty.fork()` + `os.write`/`select`) and scrape the screen for `Error`/`E\d+`.
+- Installer tests: run with a throwaway `$HOME`. For `install.sh`, point `SCRIPT_DIR` at a **copy** of the repo — a bare `ln -s` onto an existing symlink-to-directory nests a stray link inside the source.
+- `bash -n` + `shellcheck` the installers. macOS `cat` lacks `-A`.
+
 ## Conventions
 
 - Vimscript only — no plugins, no Lua, no external dependencies
+- Installer symlinks use `ln -sfn` (force + no-dereference) so re-linking is idempotent and never nests inside an existing symlink-to-directory
 - `scriptencoding utf-8` is declared in `vimrc` only; other files rely on it being set first
 - All settings in `plugin/` use global `set`; all ftplugin settings use `setlocal`
 - No hard tabs for indentation — global `set expandtab` plus each ftplugin repeats `setlocal expandtab`; autoindent is enabled globally (`set autoindent` + `filetype plugin indent on`) so every Vim-shipped language gets smart indentation
