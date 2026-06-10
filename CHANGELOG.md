@@ -25,6 +25,7 @@ This project adheres to [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 - **Keyword `<C-n>`** now fires only at the **second word character of a new word**, not on every subsequent word char. Previously the popup closed-and-re-opened on every keystroke, blocking users who wanted to type past the suggestions.
 - **`README.md`** install section advises readers to inspect `get-ivim.sh` before piping to bash.
 - **`noshowmode`** — the custom statusline already shows the mode, so Vim's native `-- INSERT --` / `-- VISUAL --` indicator in the command line was redundant. Suppressed (`set showmode` → `set noshowmode`).
+- **`get-ivim.sh` pins installs to a reviewed release commit** instead of tracking `master` HEAD. It checks out `IVIM_COMMIT` (currently `0.1.7` = `14fa639`) and verifies `HEAD` matches the expected SHA; updates `git fetch` + re-checkout the pin (detached HEAD). Users get a known-good version rather than whatever is on `master`. The `--uninstall` dirty-guard was reworked to recognise a published commit (`rev-list --count HEAD --not --remotes=origin` = 0) so a pinned detached HEAD removes cleanly while genuine local commits stay protected. (The installer script itself is still fetched from `master`, and commits remain unsigned.)
 
 ### Fixed
 
@@ -72,6 +73,5 @@ This project adheres to [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 These are design properties of iVim's install flow, documented here so users can make informed choices:
 
 - `curl … | bash` has no checksum or signature verification. Readers are advised in the README to inspect `get-ivim.sh` before running.
-- `get-ivim.sh` always tracks `HEAD` of `master`; there are no tagged versions or signed commits. A compromised maintainer account could ship code to all users on their next `get-ivim.sh` run or `git pull`.
-- `git pull --ff-only` in the update path does not detect force-pushes that create a fast-forward-compatible history.
+- `get-ivim.sh` now installs a pinned, hash-verified release commit (not an arbitrary `master` HEAD), but the installer **script** is still fetched fresh from `master` and commits are unsigned — a compromised maintainer account could still ship a malicious version bump on a user's next run.
 - JavaScript / TypeScript `omnifunc` (`javascriptcomplete#CompleteJS`) is Vim's built-in DOM-era dictionary, not a language server. Module-aware completion requires external tooling iVim deliberately does not ship.

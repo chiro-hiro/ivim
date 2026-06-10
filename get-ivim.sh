@@ -15,6 +15,13 @@ VIM_DIR="$HOME/.vim"
 VIMRC="$HOME/.vimrc"
 UNDO_DIR="$HOME/.local/share/vim/undodir"
 REPO="https://github.com/chiro-hiro/ivim.git"
+# Pin installs to a specific reviewed commit (the "release"). The installer
+# script itself is always fetched fresh from master via curl, but it checks out
+# this exact config commit — so users get a known-good version, not an arbitrary
+# master HEAD. Pin to the immutable SHA (a tag can be force-moved); IVIM_VERSION
+# is the human label (tag 0.1.7 also points here). Bump both to ship a release.
+IVIM_VERSION="0.1.7"
+IVIM_COMMIT="14fa63962bf4158fc56477b8bc3699e3020d5f32"
 TIMESTAMP="$(date +%s)"
 
 # --- Colors (ANSI-C quoting: vars contain real ESC bytes, not literal \033) ---
@@ -171,12 +178,10 @@ install() {
       err "Got:      $remote"
       exit 1
     fi
-    if ! git -C "$IVIM_DIR" pull --ff-only --quiet; then
-      err "Could not fast-forward $IVIM_DIR (local changes diverge from origin)."
-      err "Resolve manually: git -C $IVIM_DIR status   (stash/reset, then re-run)."
+    if ! git -C "$IVIM_DIR" fetch --quiet origin; then
+      err "Could not fetch updates for $IVIM_DIR — check your network and re-run."
       exit 1
     fi
-    ok "Updated $IVIM_DIR"
   else
     info "Cloning iVim..."
     if ! git clone --quiet "$REPO" "$IVIM_DIR"; then
@@ -184,7 +189,28 @@ install() {
       err "Clone failed, cleaned up partial download"
       exit 1
     fi
-    ok "Cloned to $IVIM_DIR"
+  fi
+
+  # Check out the pinned commit (detached HEAD at an immutable SHA — a tag could
+  # be force-moved, a commit hash cannot). advice.detachedHead=false silences
+  # Git's detached-HEAD notice.
+  if ! git -C "$IVIM_DIR" -c advice.detachedHead=false checkout --quiet "$IVIM_COMMIT" 2>/dev/null; then
+    err "Could not check out pinned version $IVIM_VERSION ($IVIM_COMMIT)."
+    err "Local changes in $IVIM_DIR may be in the way: git -C $IVIM_DIR status"
+    exit 1
+  fi
+  # Integrity: HEAD must be exactly the pinned commit.
+  local head
+  head="$(git -C "$IVIM_DIR" rev-parse HEAD 2>/dev/null || echo "")"
+  if [ "$head" != "$IVIM_COMMIT" ]; then
+    err "Integrity check failed for $IVIM_DIR."
+    err "Expected $IVIM_COMMIT but HEAD is ${head:-<unknown>}."
+    exit 1
+  fi
+  if [ "$is_update" = 1 ]; then
+    ok "Updated $IVIM_DIR to $IVIM_VERSION"
+  else
+    ok "Cloned iVim $IVIM_VERSION to $IVIM_DIR"
   fi
 
   # Symlinks: if both already point at $IVIM_DIR this is a re-run for an
@@ -224,9 +250,9 @@ install() {
   INSTALL_OK=1
   printf "\n"
   if [ "$is_update" = 1 ]; then
-    printf "${GREEN}${BOLD}iVim updated successfully!${RESET}\n"
+    printf "${GREEN}${BOLD}iVim ${IVIM_VERSION} updated successfully!${RESET}\n"
   else
-    printf "${GREEN}${BOLD}iVim installed successfully!${RESET}\n"
+    printf "${GREEN}${BOLD}iVim ${IVIM_VERSION} installed successfully!${RESET}\n"
   fi
   printf "\n"
   printf "  Run ${BOLD}vim${RESET} to get started.\n"
@@ -245,16 +271,17 @@ uninstall() {
     local dirty=""
     if [ -n "$(git -C "$IVIM_DIR" status --porcelain 2>/dev/null)" ]; then
       dirty="uncommitted changes"
-    elif ! git -C "$IVIM_DIR" rev-parse --abbrev-ref '@{u}' >/dev/null 2>&1; then
-      # No upstream configured (forked onto a local branch) or detached HEAD:
-      # @{u} does not resolve, so the @{u}..HEAD check would yield nothing and
-      # silently look "clean". If HEAD has any commit we cannot prove it is
-      # pushed, so refuse rather than risk rm -rf'ing unpushed local work.
-      if git -C "$IVIM_DIR" rev-parse --verify -q HEAD >/dev/null 2>&1; then
-        dirty="local commits with no upstream to compare against"
+    else
+      # Count commits reachable from HEAD but absent from every origin ref. 0
+      # means HEAD is a published commit — a pinned-version checkout (detached
+      # HEAD) or a pushed branch — so removing it loses nothing. Non-zero means
+      # local commits that were never pushed. Any error → treat as unsafe. This
+      # also covers a no-upstream local branch (its commits aren't on origin).
+      local ahead
+      ahead="$(git -C "$IVIM_DIR" rev-list --count HEAD --not --remotes=origin 2>/dev/null || echo 1)"
+      if [ "$ahead" != "0" ]; then
+        dirty="local commits not present on origin"
       fi
-    elif [ -n "$(git -C "$IVIM_DIR" log '@{u}..HEAD' --oneline 2>/dev/null)" ]; then
-      dirty="unpushed commits"
     fi
     if [ -n "$dirty" ]; then
       err "$IVIM_DIR has $dirty — not removing, and leaving your config in place."
