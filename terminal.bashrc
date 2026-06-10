@@ -18,6 +18,17 @@ _IVIM_TERMINAL_SOURCED=1
 # subsequently added to PATH, defeating the hardening.
 _IVIM_GIT="$(command -v git 2>/dev/null || true)"
 
+# macOS only: sourcing /etc/profile pulls in /etc/bashrc → /etc/bashrc_Apple_Terminal,
+# which runs Terminal.app's per-session save/restore. That machinery prints
+# "Restored session: $(date ...)", installs an update_terminal_cwd PROMPT_COMMAND
+# and an EXIT trap, and is the *only* thing in this terminal that calls `date`.
+# For an ephemeral editor-embedded terminal it is pure noise, and on a BSD/GNU
+# date mismatch (a stale ~/.bash_sessions file, or GNU coreutils ahead of
+# /bin/date in PATH) its `date` call fails with "date: illegal time format".
+# Marking the session already-initialised skips the whole block; harmless no-op
+# on Linux (the variable is simply unused).
+export SHELL_SESSION_DID_INIT=1
+
 # Source system and user profile for full environment
 [ -f /etc/profile ] && source /etc/profile
 [ -f ~/.bashrc ] && source ~/.bashrc
