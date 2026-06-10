@@ -200,10 +200,16 @@ install() {
     backup_if_exists "$VIM_DIR" "$IVIM_DIR"
     backup_if_exists "$VIMRC" "$IVIM_DIR/vimrc"
 
-    ln -s "$IVIM_DIR" "$VIM_DIR"
+    # -sfn (force + no-dereference) so re-linking is idempotent: a plain
+    # `ln -s` onto an existing symlink-to-directory (e.g. a half-installed
+    # ~/.vim still pointing at ~/.ivim) would follow the link and create a
+    # stray nested link inside the target instead of replacing it. -f only
+    # ever removes a symlink here — backup_if_exists has already moved any
+    # real file/dir aside, and unlink can't delete a real directory.
+    ln -sfn "$IVIM_DIR" "$VIM_DIR"
     ok "Linked $VIM_DIR → $IVIM_DIR"
 
-    ln -s "$IVIM_DIR/vimrc" "$VIMRC"
+    ln -sfn "$IVIM_DIR/vimrc" "$VIMRC"
     ok "Linked $VIMRC → $IVIM_DIR/vimrc"
   fi
 

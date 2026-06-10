@@ -140,11 +140,16 @@ install() {
   backup_if_exists "$VIM_DIR" "$SCRIPT_DIR"
   backup_if_exists "$VIMRC" "$SCRIPT_DIR/vimrc"
 
-  # Create symlinks
-  ln -s "$SCRIPT_DIR" "$VIM_DIR"
+  # Create symlinks. -sfn (force + no-dereference) so re-linking is idempotent:
+  # a plain `ln -s` onto an existing symlink-to-directory (e.g. a half-installed
+  # ~/.vim still pointing here) would follow the link and create a stray nested
+  # link *inside* the target instead of replacing it. -f only ever removes a
+  # symlink at this point — backup_if_exists has already moved any real file or
+  # directory aside, and unlink can't delete a real directory anyway.
+  ln -sfn "$SCRIPT_DIR" "$VIM_DIR"
   echo "  Linked: $VIM_DIR → $SCRIPT_DIR"
 
-  ln -s "$SCRIPT_DIR/vimrc" "$VIMRC"
+  ln -sfn "$SCRIPT_DIR/vimrc" "$VIMRC"
   echo "  Linked: $VIMRC → $SCRIPT_DIR/vimrc"
 
   # Create undo directory (700 to prevent other users reading undo history).
