@@ -219,7 +219,7 @@ No test framework — verify by sourcing/driving Vim headlessly:
 
 - Source-check one file: `vim -Nu NONE -i NONE -es -c 'source <file>' -c 'qa!'` (empty output = clean)
 - Smoke-test the full config: set `rtp` to `<repo>,$VIMRUNTIME,<repo>/after` then `source <repo>/vimrc`. Vim does **not** auto-derive the `after/` dir from an rtp entry — list it explicitly. The installed `~/.vim → ~/.ivim` is on the default rtp and shadows the working tree, so always set `rtp` explicitly.
-- Interactive netrw (`<CR>` on a folder, `i` list-style) can't be tested in `-es` mode — it throws spurious `E749`/`E31`. Drive a real `vim` through a Python `pty` (`pty.fork()` + `os.write`/`select`) and scrape the screen for `Error`/`E\d+`.
+- Interactive netrw (`<CR>` on a folder, `i` list-style) can't be tested in `-es` mode — it throws spurious `E749`/`E31`. Drive a real `vim` through a Python `pty` (`pty.fork()` + `os.write`/`select`) and scrape the screen for `Error`/`E\d+`. The same pty harness runs `bash --init-file terminal.bashrc` to test the terminal's startup output (e.g. stray `Restored session:` / `date` noise).
 - Installer tests: run with a throwaway `$HOME`. For `install.sh`, point `SCRIPT_DIR` at a **copy** of the repo — a bare `ln -s` onto an existing symlink-to-directory nests a stray link inside the source.
 - `bash -n` + `shellcheck` the installers. macOS `cat` lacks `-A`.
 
@@ -235,3 +235,4 @@ No test framework — verify by sourcing/driving Vim headlessly:
 - `plugin/*.vim` files carry a one-line comment header; `after/ftplugin/*.vim` files have no header
 - User input passed to `execute` must be escaped for its search context: a `/`-delimited very-nomagic (`\V`) pattern escapes only `/` and `\` (a literal `|` must NOT be escaped — `\|` is alternation in `\V`); other contexts escape whatever is special there
 - Install scripts use `set -euo pipefail`, quote all variables, verify symlink targets, refuse to run as root
+- **Portability (macOS BSD vs Linux GNU):** iVim runs on both, so installers and `terminal.bashrc` must too — watch for userland differences: `date` (a bare `date <arg>` is BSD "illegal time format"), `cat -A` (absent on BSD), `find`/`stat`/`-O`/`readlink -f` flags, `ln`. Sourcing `/etc/profile` also differs — on macOS it pulls in Apple-Terminal session machinery (see Terminal)
