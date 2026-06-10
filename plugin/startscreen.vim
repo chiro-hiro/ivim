@@ -1,5 +1,22 @@
 " iVim start screen — shows keymap help when Vim opens with no file
 
+" Draw the start-screen content (held unpadded in b:ivim_startscreen_lines)
+" centered for the current window height. Re-run on VimResized so the block
+" stays centered if the window reflows — multiplexer startup, window-manager
+" maximize, etc. — before the user dismisses it. Without this, the padding is
+" computed once at VimEnter and the content sticks to the original height.
+function! s:RenderStartScreen() abort
+  let l:lines = get(b:, 'ivim_startscreen_lines', [])
+  let l:pad = (winheight(0) - len(l:lines)) / 2
+  if l:pad > 0
+    let l:lines = repeat([''], l:pad) + l:lines
+  endif
+  setlocal modifiable
+  silent keepjumps %delete _
+  call setline(1, l:lines)
+  setlocal nomodifiable nomodified
+endfunction
+
 function! s:ShowStartScreen() abort
   " Only show when Vim opens with no file and a single empty buffer
   if argc() > 0 || line2byte('$') != -1 || &modified
@@ -54,17 +71,12 @@ function! s:ShowStartScreen() abort
   call add(l:lines, '   Esc         Cancel popup')
   call add(l:lines, '')
   call add(l:lines, '')
-  call add(l:lines, '   Press any key to start...')
+  call add(l:lines, '   Press Enter, Esc, or Space to start...')
 
-  " Center vertically
-  let l:pad = (winheight(0) - len(l:lines)) / 2
-  if l:pad > 0
-    let l:lines = repeat([''], l:pad) + l:lines
-  endif
-
-  setlocal modifiable
-  call setline(1, l:lines)
-  setlocal nomodifiable nomodified
+  " Stash the unpadded content so the screen can be re-centered on resize
+  " (s:RenderStartScreen reads it), then draw it for the current height.
+  let b:ivim_startscreen_lines = l:lines
+  call s:RenderStartScreen()
 
   " Syntax highlighting for the start screen
   syntax match IvimLogo /_ __   __ _/
@@ -75,7 +87,7 @@ function! s:ShowStartScreen() abort
   syntax match IvimSubtitle /Plugin-free Vim with Tokyo Night/
   syntax match IvimHeader /\(FILE\|BUFFERS\|CLIPBOARD\|TERMINAL\|AUTOCOMPLETE\|OTHER\|SPLITS\|SEARCH\|QUICKFIX\|TABS\)/
   syntax match IvimKey /Space [a-zA-Z=\/]\+\|Ctrl hjkl\|\]q\|\[q\|Shift-Tab\|\<Tab\>\|\<Enter\>\|\<Esc\>/
-  syntax match IvimPrompt /Press any key to start\.\.\./
+  syntax match IvimPrompt /Press Enter, Esc, or Space to start\.\.\./
 
   highlight link IvimLogo Function
   highlight link IvimSubtitle Comment
@@ -93,7 +105,14 @@ function! s:ShowStartScreen() abort
           \                      IvimKey IvimPrompt
   augroup END
 
-  " Any keypress closes the start screen
+  " Keep the block centered if the window reflows before dismissal. Buffer-
+  " local, so it is removed automatically when the screen is wiped.
+  augroup ivim_startscreen_resize
+    autocmd! * <buffer>
+    autocmd VimResized <buffer> call s:RenderStartScreen()
+  augroup END
+
+  " A common set of keys closes the start screen
   nnoremap <buffer><silent> <Space> :enew<CR>
   for key in ['a','b','c','d','e','f','g','h','i','j','k','l','m',
             \ 'n','o','p','q','r','s','t','u','v','w','x','y','z',

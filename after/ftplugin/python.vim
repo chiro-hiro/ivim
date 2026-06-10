@@ -8,3 +8,6 @@ else
   setlocal omnifunc=syntaxcomplete#Complete
 endif
 let b:ivim_complete_triggers = ['.']
+
+" Revert setlocal options and clear iVim buffer state on filetype change.
+let b:undo_ftplugin = get(b:, 'undo_ftplugin', '') . '|setlocal ts< sw< sts< et< tw< cc< ofu<|unlet! b:ivim_complete_triggers'

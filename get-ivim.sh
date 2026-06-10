@@ -84,13 +84,21 @@ find_latest_backup() {
   # shared-HOME system.
   local latest=""
   local latest_ts=0
+  local latest_ctr=0
   shopt -s nullglob
   for f in "${target}.bak."*; do
-    local ts="${f##*.bak.}"
-    if ! [[ "$ts" =~ ^[0-9]+$ ]]; then
+    # Suffix is <epoch> or, for same-second collisions, <epoch>.<counter>.
+    # Both components must be integers — anything else is a crafted name.
+    local suffix="${f##*.bak.}"
+    local ts="${suffix%%.*}"
+    local ctr="${suffix#*.}"
+    [ "$ctr" = "$suffix" ] && ctr=0
+    if ! [[ "$ts" =~ ^[0-9]+$ ]] || ! [[ "$ctr" =~ ^[0-9]+$ ]]; then
       continue
     fi
-    if [ ! -O "$f" ]; then
+    # Ownership guard — test the link itself, not its target (-O dereferences,
+    # so a user's own broken-symlink backup would fail it and never restore).
+    if [ -z "$(find "$f" -maxdepth 0 -user "$(id -un)" 2>/dev/null)" ]; then
       continue
     fi
     # Skip a "backup" that is itself a symlink into the iVim source — that is
@@ -103,8 +111,10 @@ find_latest_backup() {
         continue
       fi
     fi
-    if [ "$ts" -gt "$latest_ts" ]; then
+    if [ "$ts" -gt "$latest_ts" ] \
+       || { [ "$ts" -eq "$latest_ts" ] && [ "$ctr" -gt "$latest_ctr" ]; }; then
       latest_ts="$ts"
+      latest_ctr="$ctr"
       latest="$f"
     fi
   done
@@ -221,6 +231,32 @@ install() {
 uninstall() {
   info "Uninstalling iVim..."
 
+  # Guard against losing local work BEFORE touching the symlinks. If we tore
+  # down ~/.vim / ~/.vimrc first and only then found ~/.ivim dirty, the abort
+  # below would leave a half-uninstalled state: config already reverted to an
+  # old backup, but ~/.ivim still present and unrestorable on a re-run.
+  if [ -d "$IVIM_DIR" ] && [ ! -L "$IVIM_DIR" ] && [ -d "$IVIM_DIR/.git" ]; then
+    local dirty=""
+    if [ -n "$(git -C "$IVIM_DIR" status --porcelain 2>/dev/null)" ]; then
+      dirty="uncommitted changes"
+    elif ! git -C "$IVIM_DIR" rev-parse --abbrev-ref '@{u}' >/dev/null 2>&1; then
+      # No upstream configured (forked onto a local branch) or detached HEAD:
+      # @{u} does not resolve, so the @{u}..HEAD check would yield nothing and
+      # silently look "clean". If HEAD has any commit we cannot prove it is
+      # pushed, so refuse rather than risk rm -rf'ing unpushed local work.
+      if git -C "$IVIM_DIR" rev-parse --verify -q HEAD >/dev/null 2>&1; then
+        dirty="local commits with no upstream to compare against"
+      fi
+    elif [ -n "$(git -C "$IVIM_DIR" log '@{u}..HEAD' --oneline 2>/dev/null)" ]; then
+      dirty="unpushed commits"
+    fi
+    if [ -n "$dirty" ]; then
+      err "$IVIM_DIR has $dirty — not removing, and leaving your config in place."
+      err "Commit or push your work, or delete $IVIM_DIR manually."
+      exit 1
+    fi
+  fi
+
   if [ -L "$VIM_DIR" ] && [ "$(readlink "$VIM_DIR")" = "$IVIM_DIR" ]; then
     rm "$VIM_DIR"
     ok "Removed $VIM_DIR symlink"
@@ -251,21 +287,9 @@ uninstall() {
     warn "$VIMRC is not a symlink, skipping"
   fi
 
+  # Safe to remove now: the dirty guard above already exited if there was
+  # unsaved or unpushed work.
   if [ -d "$IVIM_DIR" ] && [ ! -L "$IVIM_DIR" ]; then
-    # Guard against losing uncommitted/unpushed local work
-    local dirty=""
-    if [ -d "$IVIM_DIR/.git" ]; then
-      if [ -n "$(git -C "$IVIM_DIR" status --porcelain 2>/dev/null)" ]; then
-        dirty="uncommitted changes"
-      elif [ -n "$(git -C "$IVIM_DIR" log '@{u}..HEAD' --oneline 2>/dev/null)" ]; then
-        dirty="unpushed commits"
-      fi
-    fi
-    if [ -n "$dirty" ]; then
-      err "$IVIM_DIR has $dirty — not removing."
-      err "Commit or push your work, or delete $IVIM_DIR manually."
-      exit 1
-    fi
     rm -rf "$IVIM_DIR"
     ok "Removed $IVIM_DIR"
   elif [ -L "$IVIM_DIR" ]; then

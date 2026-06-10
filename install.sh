@@ -81,13 +81,23 @@ find_latest_backup() {
   # on the next uninstall-and-restore).
   local latest=""
   local latest_ts=0
+  local latest_ctr=0
   shopt -s nullglob
   for f in "${target}.bak."*; do
-    local ts="${f##*.bak.}"
-    if ! [[ "$ts" =~ ^[0-9]+$ ]]; then
+    # Suffix is <epoch> or, for same-second collisions, <epoch>.<counter>.
+    # Both components must be integers — anything else is a crafted name.
+    local suffix="${f##*.bak.}"
+    local ts="${suffix%%.*}"
+    local ctr="${suffix#*.}"
+    [ "$ctr" = "$suffix" ] && ctr=0
+    if ! [[ "$ts" =~ ^[0-9]+$ ]] || ! [[ "$ctr" =~ ^[0-9]+$ ]]; then
       continue
     fi
-    if [ ! -O "$f" ]; then
+    # Ownership guard (TOCTOU / shared-HOME). Test the link itself, not its
+    # target: -O dereferences, so a backup that is a *broken* symlink (the
+    # user's own dangling ~/.vimrc, preserved by backup_if_exists) fails -O
+    # and would never be restored. find -user inspects the link via lstat.
+    if [ -z "$(find "$f" -maxdepth 0 -user "$(id -un)" 2>/dev/null)" ]; then
       continue
     fi
     # Skip a "backup" that is itself a symlink into the iVim source — that is
@@ -100,8 +110,10 @@ find_latest_backup() {
         continue
       fi
     fi
-    if [ "$ts" -gt "$latest_ts" ]; then
+    if [ "$ts" -gt "$latest_ts" ] \
+       || { [ "$ts" -eq "$latest_ts" ] && [ "$ctr" -gt "$latest_ctr" ]; }; then
       latest_ts="$ts"
+      latest_ctr="$ctr"
       latest="$f"
     fi
   done
