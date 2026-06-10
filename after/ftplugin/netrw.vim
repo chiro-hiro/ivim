@@ -6,6 +6,9 @@ setlocal statusline=%#StlFile#\ Explorer
 nnoremap <buffer><silent> <CR> :call IvimNetrwOpenInEditor()<CR>
 nmap <buffer><silent> <2-LeftMouse> <CR>
 
-" Revert the setlocal options, buffer mappings, and tree-conceal syntax on
-" filetype change so none of it leaks into a non-netrw buffer.
-let b:undo_ftplugin = get(b:, 'undo_ftplugin', '') . '|setlocal cole< cocu< stl<|silent! nunmap <buffer> <CR>|silent! nunmap <buffer> <2-LeftMouse>|silent! syntax clear NetrwTreeSmooth'
+" Deliberately NO b:undo_ftplugin here. netrw re-fires FileType on its own
+" buffer during routine operations (list-style toggle `i`, directory change),
+" and any b:undo_ftplugin makes Vim unlet b:did_ftplugin and *reload* netrw's
+" own ftplugin mid-operation — which throws `E749: Empty buffer`. netrw buffers
+" are disposable (bufhidden=wipe) and are never re-typed to another filetype,
+" so there is no setlocal/b:ivim_* state to undo in the first place.

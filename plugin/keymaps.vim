@@ -115,13 +115,16 @@ function! IvimNetrwOpenInEditor() abort
 
   let l:fullpath = simplify(b:netrw_curdir . '/' . l:relpath)
 
-  " Let netrw handle directories (expand/collapse) and anything we can't
-  " read as a regular file. Guard against netrw being disabled
-  " (g:loaded_netrw=1) — the <Plug> map won't exist and `normal` would
-  " raise E116.
-  let l:has_plug = !empty(maparg("\<Plug>NetrwLocalBrowseCheck", 'n'))
+  " Let netrw handle directories (expand/collapse) and anything we can't read
+  " as a regular file via its own <CR> handler, <Plug>NetrwLocalBrowseCheck.
+  " Guard on netrw being loaded rather than on maparg(): the handler is a
+  " buffer-local <Plug> mapping that maparg() cannot find by name (it returns
+  " empty even for an existing <Plug> map), so the old maparg guard was always
+  " false and directories never expanded. netrw#LocalBrowseCheck() exists
+  " whenever netrw is active, so `normal <Plug>…` is safe (no E116) here.
+  let l:netrw_active = exists('*netrw#LocalBrowseCheck')
   if isdirectory(l:fullpath) || !filereadable(l:fullpath)
-    if l:has_plug
+    if l:netrw_active
       execute "normal \<Plug>NetrwLocalBrowseCheck"
     endif
     return
