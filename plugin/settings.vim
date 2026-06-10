@@ -17,7 +17,7 @@ set scrolloff=8
 set sidescrolloff=8
 set laststatus=2
 set showcmd
-set showmode
+set noshowmode
 set ruler
 let &fillchars .= ',eob: ,vert:│'
 
