@@ -73,12 +73,14 @@ function! s:MaybeTrigger() abort
   endif
 
   " Keyword: fire only on the second word char of a new word. Re-firing every
-  " keystroke within a word thrashes the popup open/close cycle and stops
-  " the user from typing past suggestions they want to ignore.
-  let l:ch = l:line[l:col - 2]
-  if l:ch =~# '\k'
-        \ && l:col >= 3 && l:line[l:col - 3] =~# '\k'
-        \ && (l:col < 4 || l:line[l:col - 4] !~# '\k')
+  " keystroke within a word thrashes the popup open/close cycle and stops the
+  " user from typing past suggestions they want to ignore. Measure the trailing
+  " \k run before the cursor with matchstr + strchars (character-aware) rather
+  " than byte subscripts (l:line[l:col - 2]), so multibyte word characters
+  " (accented Latin, Cyrillic, CJK) count as whole characters instead of being
+  " split into lead/trailing bytes — the latter silently suppressed completion
+  " around any non-ASCII text.
+  if strchars(matchstr(strpart(l:line, 0, l:col - 1), '\k*$')) == 2
     call feedkeys("\<C-n>", 'n')
   endif
 endfunction

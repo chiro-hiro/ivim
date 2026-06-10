@@ -5,7 +5,7 @@
 " === File/Buffer Navigation ===
 nnoremap <leader>w :w<CR>
 nnoremap <leader>q :confirm qall<CR>
-nnoremap <leader>x :xall<CR>
+nnoremap <leader>x :call <SID>SaveQuitAll()<CR>
 
 function! s:CloseTerminals() abort
   for buf in getbufinfo()
@@ -15,13 +15,37 @@ function! s:CloseTerminals() abort
   endfor
 endfunction
 
-" VimLeavePre — only fires when Vim is actually exiting. QuitPre fired on
-" every :q, so an aborted quit (e.g. unsaved changes in another window)
-" would silently kill all running terminal jobs while Vim stayed open.
+" Wipe terminal jobs only when Vim is actually about to exit — i.e. the
+" window being quit is the last non-terminal ("ordinary") window. Cleaning
+" unconditionally on QuitPre would kill terminals on a single-window or
+" aborted :q while Vim stays open; VimLeavePre fires too late to pre-empt the
+" E947 "job still running" check that blocks :qall. The last-ordinary-window
+" gate threads between both: no spurious kills, no E947 on a real :qall exit.
+function! s:CloseTerminalsOnExit() abort
+  let l:ordinary = 0
+  for l:win in getwininfo()
+    if getbufvar(l:win.bufnr, '&buftype') !=# 'terminal'
+      let l:ordinary += 1
+    endif
+  endfor
+  if l:ordinary <= 1
+    call s:CloseTerminals()
+  endif
+endfunction
+
 augroup ivim_terminal_cleanup
   autocmd!
-  autocmd VimLeavePre * call s:CloseTerminals()
+  autocmd QuitPre * call s:CloseTerminalsOnExit()
 augroup END
+
+" :xall (<leader>x) does not fire QuitPre on every Vim version, so the gate
+" above cannot pre-empt the E948 "job still running" abort for save-and-quit-
+" all. Wipe terminals explicitly first. CloseTerminals is idempotent, so a
+" QuitPre that *does* also fire afterwards is a harmless no-op.
+function! s:SaveQuitAll() abort
+  call s:CloseTerminals()
+  xall
+endfunction
 
 " Exit insert mode when entering a non-modifiable buffer (e.g. via mouse
 " click into netrw). Without this, the next keystroke errors with E21.

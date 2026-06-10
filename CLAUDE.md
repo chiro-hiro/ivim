@@ -167,7 +167,7 @@ On Vim 8.2.1978+ the trigger uses `<Cmd>popup PopUp<CR>` so insert mode is prese
 - Uses `term_start(['bash', '--init-file', l:rcfile], {…})` with a list argument — NOT `:execute 'below terminal …'` — so paths containing spaces do not misparse (Vim's `:terminal` splits its command on whitespace regardless of quoting)
 - `terminal.bashrc` sources `/etc/profile` and `~/.bashrc` first (full user env inherited), then sets a green-user / cyan-host / blue-cwd / purple-branch prompt (branch segment is space-prefixed, no font dependency); detached HEAD renders as `detached:<short-SHA>`
 - `terminal.bashrc` guards against recursive sourcing via `_IVIM_TERMINAL_SOURCED` so any `~/.bashrc` loop is a no-op on re-entry
-- Auto-closes terminal buffers on quit (`QuitPre` autocommand)
+- Auto-closes terminal buffers when Vim exits: a `QuitPre` autocommand (`s:CloseTerminalsOnExit`) gated on the last non-terminal window — so a single-window or aborted `:q` never kills terminals, and `:qall` never trips `E947` (job still running). `<leader>x` (`:xall`) does not fire `QuitPre` on every Vim version, so it routes through `s:SaveQuitAll`, which wipes terminals before `:xall` to avoid `E948`
 - `ivim_terminal_mouse` autogroup clears netrw mouse mappings that would otherwise leak into the terminal buffer
 - ANSI colors set via `g:terminal_ansi_colors` in colorscheme (guarded by `has('terminal')`)
 

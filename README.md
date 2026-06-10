@@ -156,7 +156,7 @@ Full implementation of the Tokyo Night "night" palette with both true color (`te
 
 ### Autocomplete
 
-IDE-style auto-completion with zero plugins. Typing 2+ identifier characters pops up a keyword-completion menu from the current file and open buffers; language trigger characters (`.`, `:`, `>`, `<`, `/`, `$`) invoke Vim's built-in filetype `omnifunc`. Disabled automatically in prose filetypes (markdown, gitcommit, plain text, help).
+IDE-style auto-completion with zero plugins. Typing 2+ identifier characters pops up a keyword-completion menu from the current file and open buffers; language trigger characters (`.`, `:`, `>`, `<`, `/`, `$`, and space in HTML) invoke Vim's built-in filetype `omnifunc`. Disabled automatically in prose filetypes (markdown, gitcommit, plain text, help).
 
 ### Filetype Support
 
@@ -194,6 +194,7 @@ ivim/
 ├── colors/tokyonight.vim     # Tokyo Night colorscheme (gui + cterm256)
 ├── plugin/
 │   ├── autocomplete.vim      # IDE-style auto-completion engine
+│   ├── context_menu.vim      # Right-click Copy/Cut/Paste menu
 │   ├── keymaps.vim           # Key mappings, terminal, file explorer logic
 │   ├── settings.vim          # Core editor settings with feature guards
 │   ├── startscreen.vim       # Start screen with keymap reference

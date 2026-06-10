@@ -206,6 +206,13 @@ function! StlTabLabel(n) abort
   if empty(l:name)
     let l:name = '[No Name]'
   endif
+  " The tabline is built with %!StlTabLine(), so the returned string is
+  " re-scanned for statusline items — an unescaped % in a filename (e.g.
+  " 100%done.txt) would be consumed as %c/%l/etc. and corrupt the label.
+  " Escape the basename only (the surrounding spaces and ' [+]' carry no %).
+  " The %{StlFilename()} statuslines don't need this: %{} output is not
+  " re-interpreted.
+  let l:name = substitute(l:name, '%', '%%', 'g')
   if getbufvar(l:buflist[l:winnr - 1], '&modified')
     let l:name .= ' [+]'
   endif
